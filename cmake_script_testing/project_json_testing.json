@@ -1,0 +1,6 @@
+{
+    "name" : "my-project" ,
+    "homepage" : "www.some_where_nice.maybe" ,
+    "version" : "1.0.0",
+    "languages" : "C CXX"
+}
