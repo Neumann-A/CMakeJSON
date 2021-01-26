@@ -1,0 +1,26 @@
+{
+    "name": "some-name",
+    "array": [ {
+        "a1": "atest",
+        "a2": "atest2"
+    },
+    {
+        "a3": "bla",
+        "a4": "blub"
+    } ],
+    "boolean": false,
+    "number": 42,
+    "object": {
+        "objnumber": 43,
+        "objbool" : true
+    },
+    "null": null,
+    "otherarray": [ 
+        "otest",
+        "otest2",
+        "blabla",
+        {
+            "a4": "blub"
+        }
+         ]
+}

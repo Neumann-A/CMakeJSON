@@ -1,0 +1,23 @@
+# This file defines the json layout for projects within CMakeJSON
+project:OBJECT
+project;name:STRING              # Name of the Project
+project;version:STRING           # Version of the Project
+project;homepage:STRING          # Project homepage
+project;languages:STRING         # languages to activate for the project
+project;option_file:STRING         # languages to activate for the project
+
+project;options:ARRAY
+project;options;:OBJECT;
+project;options;;variable:STRING;
+project;options;;description:STRING;                # description for feature summary
+project;options;;condition:STRING;OPTIONAL          # see CMakeDependentOption
+
+# Dependencies in options will be marked as optional!
+project;options;dependencies:ARRAY;OPTIONAL
+project;options;dependencies;name:STRING              #find_package(name)
+project;options;dependencies;:OBJECT
+project;options;dependencies;;name:STRING             # find_package(name)
+project;options;dependencies;;version:STRING          # find_package(name version)
+project;options;dependencies;;components:STRING       # find_package(name version COMPONENTS components)
+project;options;dependencies;;description:STRING      # description for feature summary
+project;options;dependencies;;parameters:STRING       # additional parameters to pass to find_package such as MODULE CONFIG etc. 
