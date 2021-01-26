@@ -4,13 +4,16 @@ project;name:STRING              # Name of the Project
 project;version:STRING           # Version of the Project
 project;homepage:STRING          # Project homepage
 project;languages:STRING         # languages to activate for the project
-project;option_file:STRING         # languages to activate for the project
+project;option_file:STRING       # languages to activate for the project
 
 project;options:ARRAY
-project;options;:OBJECT;
-project;options;;variable:STRING;
-project;options;;description:STRING;                # description for feature summary
+project;options;:OBJECT
+project;options;;variable:STRING
+project;options;;default:STRING;OPTIONAL
+project;options;;description:STRING                # description for feature summary
 project;options;;condition:STRING;OPTIONAL          # see CMakeDependentOption
+project;options;;type:STRING;OPTIONAL
+project;options;;values:ARRAY;OPTIONAL
 
 # Dependencies in options will be marked as optional!
 project;options;dependencies:ARRAY;OPTIONAL

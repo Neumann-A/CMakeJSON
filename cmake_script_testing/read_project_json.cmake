@@ -1,14 +1,20 @@
 include(CMakePrintHelpers)
 file(READ "${CMAKE_CURRENT_LIST_DIR}/project_json_testing.json" json_contents)
 file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/../CMakeJSON/layouts/project_layout.txt" layout_contents 
-             REGEX [=[^([a-z]*;)*[a-z]*:(NUMBER|STRING|BOOLEAN|ARRAY|OBJECT|ENUM:[a-zA-Z]+(\|[a-zA-Z]+)*)(;OPTIONAL)? ]=])
+             REGEX [=[^([a-z]*;)*[a-z]*:(NUMBER|STRING((:[a-zA-Z0-9]+)(\|[[a-zA-Z0-9]+))?|BOOLEAN|ARRAY|OBJECT)(;OPTIONAL)? ]=])
 set(sanitzed_layout)
 foreach(line IN LISTS layout_contents)
     string(REGEX REPLACE " +#.*" "" line "${line}")
+    string(REGEX REPLACE [[;]] "_" variable_name "${line}")
+    string(PREPEND variable_name "CMakeJSON_Layout_")
+    string(REGEX REPLACE ":[a-zA-Z]" "" variable_name "${variable_name}")
+    set(${variable_name}_INFO )
     string(REGEX REPLACE [[;]] "\\\;" line "${line}")
-    message(STATUS "${line}")
+    message(STATUS "${variable_name} : ${line}")
     list(APPEND sanitzed_layout "${line}")
 endforeach()
+
+
 
 
 string(JSON length ERROR_VARIABLE err LENGTH "${json_contents}")
