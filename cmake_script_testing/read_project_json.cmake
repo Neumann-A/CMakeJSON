@@ -72,21 +72,54 @@ foreach(json_index RANGE ${length})
     message(STATUS "Member at index '${json_index}': '${member}':'${type}' = '${value}'")
 endforeach()
 
-function(parse_cmakejson)
-    cmake_parse_arguments(PARSE_ARGV 0 "_p_json" "IS_ARRAY" "JSON_ROOT_LAYOUT;INPUT_JSON" "")
-    string(JSON length ERROR_VARIABLE err LENGTH "${_p_json_INPUT_JSON}")
+# Macro to create a unique prefix for cmake_parse_arguments within a function
+macro(cmakejson_create_function_parse_arguments_prefix)
+    string(REGEX REPLACE  "_([a-zA-Z])[^_]+" "\\1" ${ARGV0} "${CMAKE_CURRENT_FUNCTION}")
+    string(REPLACE "cmakejson" "_cmakejson_" ${ARGV0} "${${ARGV0}}")
+endmacro()
+
+# Macro to return ARGN variables from the currently scoped function into the calling function
+macro(cmakejson_return_variables)
+    foreach(arg IN ITEMS ${ARGN})
+        set(${arg} ${${arg}} PARENT_SCOPE)
+    endforeach()
+endmacro()
+
+# Function to parse json files
+# This function will be called recursivley until all members have been discovered and the values been set to 
+function(cmakejson_parse_json)
+    cmakejson_create_function_parse_arguments_prefix(_PREFIX)
+    cmake_parse_arguments(PARSE_ARGV 0 "${_PREFIX}" "IS_ARRAY;IS_OBJECT" "JSON_INPUT" "CURRENT_JSON_MEMBER_BASE")
+    if(${_PREFIX}_UNPARSED_ARGUMENTS)
+    endif()
+
+    set(access_list ${${_PREFIX}_ACCESS_LIST})
+    string(JSON length ERROR_VARIABLE err LENGTH "${${_PREFIX}_INPUT_JSON}" ${_PREFIX}_CURRENT_JSON_MEMBER_BASE)
     math(EXPR length "${length}-1") # Correct range stop in for loop
     foreach(json_index RANGE ${length})
         set(member_or_index ${json_index})
         if(NOT _p_json_IS_ARRAY)
-            string(JSON member ERROR_VARIABLE CMakeJSON_ParseError MEMBER "${json_contents}" ${json_index})
+            string(JSON member ERROR_VARIABLE CMakeJSON_ParseError MEMBER "${${_PREFIX}_INPUT_JSON}" ${json_index})
             if(CMakeJSON_ParseError)
                 cmake_print_variables(CMakeJSON_ParseError)
             endif()
             set(member_or_index ${member})
         endif()
 
-        string(JSON type ERROR_VARIABLE CMakeJSON_ParseError TYPE "${json_contents}" ${member_or_index})
+        string(JSON type ERROR_VARIABLE CMakeJSON_ParseError TYPE "${${_PREFIX}_INPUT_JSON}" ${_PREFIX}_CURRENT_JSON_MEMBER_BASE ${member_or_index})
+
+        if(type MATCHES "OBJECT|ARRAY")
+            message(STATUS "Found ARRAY or OBJECT; Calling recursivly")
+            cmakejson_parse_json(IS_${type} 
+                                 JSON_INPUT 
+                                    ${_PREFIX}_JSON_INPUT 
+                                 CURRENT_JSON_MEMBER_BASE 
+                                    ${_PREFIX}_CURRENT_JSON_MEMBER_BASE ${member_or_index})
+        else() # STRING;NUMBER;BOOLEAN;NULL
+            list(JOIN ${_PREFIX}_CURRENT_JSON_MEMBER_BASE ${member_or_index} "_" varname)
+            set(_CMakeJSON_${varname} CHACHE INTERNAL "" )
+        endif()
+
         if(CMakeJSON_ParseError)
             cmake_print_variables(CMakeJSON_ParseError)
         endif()
