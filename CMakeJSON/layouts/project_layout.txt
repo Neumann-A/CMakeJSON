@@ -19,8 +19,17 @@ project;options;;values:ARRAY;OPTIONAL
 project;options;dependencies:ARRAY;OPTIONAL
 project;options;dependencies;name:STRING              #find_package(name)
 project;options;dependencies;:OBJECT
-project;options;dependencies;;name:STRING             # find_package(name)
-project;options;dependencies;;version:STRING          # find_package(name version)
-project;options;dependencies;;components:STRING       # find_package(name version COMPONENTS components)
-project;options;dependencies;;description:STRING      # description for feature summary
-project;options;dependencies;;parameters:STRING       # additional parameters to pass to find_package such as MODULE CONFIG etc. 
+project;options;dependencies;;name:STRING                      # find_package(name)
+project;options;dependencies;;version:STRING;OPTIONAL          # find_package(name version)
+project;options;dependencies;;components:STRING;OPTIONAL       # find_package(name version COMPONENTS components)
+project;options;dependencies;;description:STRING;OPTIONAL      # description for feature summary ehy the dependency is needed
+project;options;dependencies;;parameters:STRING;OPTIONAL       # additional parameters to pass to find_package such as MODULE CONFIG etc. 
+
+project;dependencies;name:STRING              #find_package(name)
+project;dependencies:ARRAY
+project;dependencies;:OBJECT
+project;dependencies;;name:STRING                      # find_package(name)
+project;dependencies;;version:STRING;OPTIONAL          # find_package(name version)
+project;dependencies;;components:STRING;OPTIONAL       # find_package(name version COMPONENTS components)
+project;dependencies;;description:STRING;OPTIONAL      # description for feature summary
+project;dependencies;;parameters:STRING;OPTIONAL       # additional parameters to pass to find_package such as MODULE CONFIG etc. 

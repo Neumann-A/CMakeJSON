@@ -3,5 +3,21 @@
     "homepage" : "www.some_where_nice.maybe" ,
     "version" : "1.0.0",
     "languages" : "C CXX",
-    "not-a-key": null
+    "not-a-key": null,
+    "dependencies" : [
+        "foo",
+        {
+            "name" : "requiredfoo"
+        }
+    ],
+
+    "options" : [
+        { "variable" : "WITH_EXTBAR",
+          "description" : "Use external package 'bar'",
+          "dependencies" : [ 
+              "bar", 
+              { "name" : "extrabar" }
+              ] },
+        {}
+    ]
 }
