@@ -18,6 +18,12 @@
               "bar", 
               { "name" : "extrabar" }
               ] },
-        {}
+        "blub"
+    ],
+
+    "contains" : [
+        "src",
+        "other.json",
+        "other.cmake"
     ]
 }

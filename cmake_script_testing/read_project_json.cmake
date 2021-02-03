@@ -44,33 +44,30 @@ foreach(line IN LISTS layout_contents)
     list(APPEND sanitzed_layout "${line}")
 endforeach()
 
+# string(JSON length ERROR_VARIABLE err LENGTH "${json_contents}")
+# message(STATUS "Layout of JSON contents:'${sanitzed_layout}'")
+# message(STATUS "Length of JSON contents:'${length}'")
+# math(EXPR length "${length}-1")
+# foreach(json_index RANGE ${length})
+#     string(JSON member ERROR_VARIABLE err MEMBER "${json_contents}" ${json_index})
+#     if(err)
+#         cmake_print_variables(err)
+#     endif()
+#     string(JSON type ERROR_VARIABLE err TYPE "${json_contents}" ${member})
+#     if(err)
+#         cmake_print_variables(err)
+#     endif()
+#     list(FIND sanitzed_layout "project;${member}:${type}" found_index)
+#     if(found_index LESS 0)
+#         message(WARNING "Unknwon JSON member: project\;${member}:${type}")
+#     endif()
+#     string(JSON value ERROR_VARIABLE err GET "${json_contents}" ${member})
+#     if(err)
+#         cmake_print_variables(err)
+#     endif()
 
-
-
-string(JSON length ERROR_VARIABLE err LENGTH "${json_contents}")
-message(STATUS "Layout of JSON contents:'${sanitzed_layout}'")
-message(STATUS "Length of JSON contents:'${length}'")
-math(EXPR length "${length}-1")
-foreach(json_index RANGE ${length})
-    string(JSON member ERROR_VARIABLE err MEMBER "${json_contents}" ${json_index})
-    if(err)
-        cmake_print_variables(err)
-    endif()
-    string(JSON type ERROR_VARIABLE err TYPE "${json_contents}" ${member})
-    if(err)
-        cmake_print_variables(err)
-    endif()
-    list(FIND sanitzed_layout "project;${member}:${type}" found_index)
-    if(found_index LESS 0)
-        message(WARNING "Unknwon JSON member: project\;${member}:${type}")
-    endif()
-    string(JSON value ERROR_VARIABLE err GET "${json_contents}" ${member})
-    if(err)
-        cmake_print_variables(err)
-    endif()
-
-    message(STATUS "Member at index '${json_index}': '${member}':'${type}' = '${value}'")
-endforeach()
+#     message(STATUS "Member at index '${json_index}': '${member}':'${type}' = '${value}'")
+# endforeach()
 
 # Macro to create a unique prefix for cmake_parse_arguments within a function
 macro(cmakejson_create_function_parse_arguments_prefix)
@@ -89,40 +86,113 @@ endmacro()
 # This function will be called recursivley until all members have been discovered and the values been set to 
 function(cmakejson_parse_json)
     cmakejson_create_function_parse_arguments_prefix(_PREFIX)
-    cmake_parse_arguments(PARSE_ARGV 0 "${_PREFIX}" "IS_ARRAY;IS_OBJECT" "JSON_INPUT" "CURRENT_JSON_MEMBER_BASE")
+    cmake_parse_arguments(PARSE_ARGV 0 "${_PREFIX}" "IS_ARRAY;IS_OBJECT" "JSON_INPUT;VARIABLE_PREFIX" "CURRENT_JSON_MEMBER_BASE")
     if(${_PREFIX}_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION} at ${CMAKE_CURRENT_FUNCTION_LIST_LINE}: Unknown parameters passed. UNPARSED:'${${_PREFIX}_UNPARSED_ARGUMENTS}' ")
     endif()
 
+    ### Setting up helper variables. 
+    list(TRANSFORM ${_PREFIX}_CURRENT_JSON_MEMBER_BASE TOUPPER OUTPUT_VARIABLE JSON_MEMBER_BASE_VAR)
+    list(JOIN JSON_MEMBER_BASE_VAR "_" JSON_MEMBER_BASE_VAR)
+    set(CMakeJSON_CURRENT_VAR_PREFIX)
+    if(${_PREFIX}_VARIABLE_PREFIX AND JSON_MEMBER_BASE_VAR)
+        set(CMakeJSON_CURRENT_VAR_PREFIX ${${_PREFIX}_VARIABLE_PREFIX}_${JSON_MEMBER_BASE_VAR})
+    elseif(${_PREFIX}_VARIABLE_PREFIX)
+        set(CMakeJSON_CURRENT_VAR_PREFIX ${${_PREFIX}_VARIABLE_PREFIX})
+    elseif(JSON_MEMBER_BASE_VAR)
+        set(CMakeJSON_CURRENT_VAR_PREFIX ${JSON_MEMBER_BASE_VAR})
+    endif()
+    cmake_print_variables(CMakeJSON_CURRENT_VAR_PREFIX)
+
+    ### Parsing logic
     set(access_list ${${_PREFIX}_ACCESS_LIST})
-    string(JSON length ERROR_VARIABLE err LENGTH "${${_PREFIX}_INPUT_JSON}" ${_PREFIX}_CURRENT_JSON_MEMBER_BASE)
-    math(EXPR length "${length}-1") # Correct range stop in for loop
-    foreach(json_index RANGE ${length})
+    string(JSON length ERROR_VARIABLE err LENGTH "${${_PREFIX}_JSON_INPUT}" ${${_PREFIX}_CURRENT_JSON_MEMBER_BASE})
+    if(NOT length)
+        message(FATAL_ERROR "No length in '${${_PREFIX}_CURRENT_JSON_MEMBER_BASE}'")
+    endif()
+    math(EXPR range_length "${length}-1") # Correct range stop in for loop
+    foreach(json_index RANGE ${range_length})
         set(member_or_index ${json_index})
-        if(NOT _p_json_IS_ARRAY)
-            string(JSON member ERROR_VARIABLE CMakeJSON_ParseError MEMBER "${${_PREFIX}_INPUT_JSON}" ${json_index})
+        if(NOT ${_PREFIX}_IS_ARRAY)
+            string(JSON member ERROR_VARIABLE CMakeJSON_ParseError MEMBER "${${_PREFIX}_JSON_INPUT}" ${json_index})
             if(CMakeJSON_ParseError)
                 cmake_print_variables(CMakeJSON_ParseError)
             endif()
             set(member_or_index ${member})
+        else()
+            set(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX} ${length} CACHE INTERNAL "" )
         endif()
 
-        string(JSON type ERROR_VARIABLE CMakeJSON_ParseError TYPE "${${_PREFIX}_INPUT_JSON}" ${_PREFIX}_CURRENT_JSON_MEMBER_BASE ${member_or_index})
-
+        string(JSON type ERROR_VARIABLE CMakeJSON_ParseError TYPE "${${_PREFIX}_JSON_INPUT}" ${${_PREFIX}_CURRENT_JSON_MEMBER_BASE} ${member_or_index})
+        string(JSON contents ERROR_VARIABLE CMakeJSON_ParseError GET "${${_PREFIX}_JSON_INPUT}" ${${_PREFIX}_CURRENT_JSON_MEMBER_BASE} ${member_or_index})
+        #cmake_print_variables(member_or_index)
+        #cmake_print_variables(contents)
         if(type MATCHES "OBJECT|ARRAY")
-            message(STATUS "Found ARRAY or OBJECT; Calling recursivly")
-            cmakejson_parse_json(IS_${type} 
-                                 JSON_INPUT 
-                                    ${_PREFIX}_JSON_INPUT 
-                                 CURRENT_JSON_MEMBER_BASE 
-                                    ${_PREFIX}_CURRENT_JSON_MEMBER_BASE ${member_or_index})
+            message(STATUS "Found ARRAY or OBJECT (${type}); Calling recursivly")
+            if(type STREQUAL OBJECT)
+                string(TOUPPER "${member_or_index}" object_name)
+                cmakejson_parse_json(IS_${type} 
+                                    JSON_INPUT 
+                                        "${contents}"
+                                    VARIABLE_PREFIX
+                                        ${CMakeJSON_CURRENT_VAR_PREFIX}_${object_name}
+                                    )
+            else()
+                string(TOUPPER "${member_or_index}" array_name)
+                cmakejson_parse_json(IS_${type} 
+                                     JSON_INPUT 
+                                        "${contents}"
+                                     VARIABLE_PREFIX
+                                        ${CMakeJSON_CURRENT_VAR_PREFIX}_${array_name}
+                                    )
+                cmake_print_variables(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX}_${array_name})
+            endif()
         else() # STRING;NUMBER;BOOLEAN;NULL
-            list(JOIN ${_PREFIX}_CURRENT_JSON_MEMBER_BASE ${member_or_index} "_" varname)
-            set(_CMakeJSON_${varname} CHACHE INTERNAL "" )
+            #cmake_print_variables(${_PREFIX}_IS_ARRAY)
+            #cmake_print_variables(${_PREFIX}_IS_OBJECT)
+            if(${_PREFIX}_IS_ARRAY)
+                set(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX}_${json_index} ${contents} CACHE INTERNAL "" )
+                cmake_print_variables(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX}_${json_index})
+            elseif(${_PREFIX}_IS_OBJECT)
+                string(TOUPPER "${member_or_index}" object_name)
+                set(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX}_${object_name} ${contents} CACHE INTERNAL "" )
+                cmake_print_variables(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX}_${object_name})
+            else()
+                set(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX} ${contents} CACHE INTERNAL "" )
+                cmake_print_variables(CMakeJSON_PARSE_${CMakeJSON_CURRENT_VAR_PREFIX})
+            endif()
         endif()
 
         if(CMakeJSON_ParseError)
             cmake_print_variables(CMakeJSON_ParseError)
         endif()
-        if(type STREQUAL "ARRAY")
+
     endforeach()
 endfunction()
+
+function(cmakejson_create_project)
+    set(PROJECT_PARAMS "${CMakeJSON_PARSE_PROJECT_NAME}")
+    if(CMakeJSON_PARSE_PROJECT_VERSION)
+        list(APPEND PROJECT_PARAMS VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}")
+    endif()
+    if(CMakeJSON_PARSE_PROJECT_DESCRIPTION)
+        list(APPEND PROJECT_PARAMS DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}")
+    endif()
+    if(CMakeJSON_PARSE_PROJECT_HOMEPAGE)
+        list(APPEND PROJECT_PARAMS HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}")
+    endif()
+    if(CMakeJSON_PARSE_PROJECT_HOMEPAGE)
+        list(APPEND PROJECT_PARAMS LANGUAGES "${CMakeJSON_PARSE_PROJECT_LANGUAGES}")
+    endif()
+    _project(${PROJECT_PARAMS})
+endfunction()
+
+
+### Loading Stuff
+message(STATUS "############################ Validate JSON ##########################")
+message(STATUS "############################## Parse JSON ###########################")
+cmakejson_parse_json(IS_OBJECT JSON_INPUT "${json_contents}" VARIABLE_PREFIX "PROJECT")
+message(STATUS "############################ Create Project #########################")
+cmakejson_create_project_options()
+cmakejson_create_project()
+cmakejson_resolve_project_dependencies()
