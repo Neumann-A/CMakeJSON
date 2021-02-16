@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "cstdio": "cpp"
+    },
+    "cmake.configureOnOpen": true,
+    "cmake.configureArgs": ["--preset=default"]
+}

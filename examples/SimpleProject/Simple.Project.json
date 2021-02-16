@@ -1,0 +1,16 @@
+{
+    "name" : "SimpleProject" ,
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "version" : "1.0.0",
+    "languages" : "C;CXX",
+    "options" : [
+        { 
+            "variable" : "WITH_SOMETHING",
+            "description" : "build with option something"
+        }
+    ],
+    "list" : [
+        "Library.Target.json",
+        "Executable.Target.json"
+    ]
+}

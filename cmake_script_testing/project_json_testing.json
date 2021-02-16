@@ -21,7 +21,7 @@
         "blub"
     ],
 
-    "contains" : [
+    "list" : [
         "src",
         "other.json",
         "other.cmake"

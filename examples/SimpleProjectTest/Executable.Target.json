@@ -1,0 +1,11 @@
+{
+    "name" : "ExecutableTarget" ,
+    "target_type" : "executable",
+    "sources" : "src/simple.cpp",
+
+    "link_libraries" : {
+        "private": [
+            "LibraryTarget"
+        ]
+    }
+}
