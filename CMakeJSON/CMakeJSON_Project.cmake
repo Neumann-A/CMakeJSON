@@ -12,7 +12,19 @@ endfunction()
 
 function(cmakejson_project_option_setup _optprefix)
     cmakejson_print_variables_if(CMakeJSON_DEBUG_PROJECT_OPTIONS _optprefix)
+    if(NOT DEFINED ${_optprefix}_VARIABLE AND NOT DEFINED ${_optprefix}_NAME)
+        message(${CMakeJSON_MSG_ERROR_TYPE} "Invalid option in '${_optprefix}'. Option has neither a member 'name' or 'variable'! At least one is required!")
+    endif() 
+    if(NOT DEFINED ${_optprefix}_VARIABLE)
+        string(TOUPPER "WITH_${${_optprefix}_NAME}" ${_optprefix}_VARIABLE)
+    endif()
+    if(NOT DEFINED ${_optprefix}_NAME)
+        string(REPLACE "^WITH_" "" ${_optprefix}_NAME "${${_optprefix}_VARIABLE}")
+        string(TOLOWER "${${_optprefix}_NAME}" ${_optprefix}_NAME)
+    endif()
+
     cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_OPTIONS "Creating option '${${_optprefix}_VARIABLE}': '${${_optprefix}_DESCRIPTION}'")
+
     set(IS_BOOL_OPTION TRUE)
     set(HAS_TYPE FALSE)
     if(DEFINED ${${_optprefix}}_TYPE)
@@ -37,12 +49,17 @@ function(cmakejson_project_option_setup _optprefix)
             set(OPT_PARAMS "${${${_optprefix}}_CONDITION}" OFF)
         endif()
         cmake_language(CALL ${OPT_FUNC} "${${_optprefix}_VARIABLE}" "${${_optprefix}_DEFAULT_VALUE}" "${${_optprefix}_DESCRIPTION}" ${OPT_PARAMS})
+        # Can only add feature info to BOOL options
+        if(NOT ${_optprefix}_NO_FEATURE_INFO)
+            add_feature_info("${${_optprefix}_NAME}" "${${_optprefix}_VARIABLE}" "${${_optprefix}_DESCRIPTION}")
+        endif()
         if(${${_optprefix}_VARIABLE})
             # TODO: Do something?
         endif()
         if(${${_optprefix}_DEPENDENCIES})
             # TODO: Setup dependency list. 
         endif()
+
     else()
         if(NOT DEFINED ${${_optprefix}_DEFAULT_VALUE})
             message(${CMakeJSON_MSG_WARNING_TYPE} "Missing 'default_value' for option '${${_optprefix}_VARIABLE}'! Assuming empty string.")
