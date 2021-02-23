@@ -3,5 +3,5 @@
         "cstdio": "cpp"
     },
     "cmake.configureOnOpen": true,
-    "cmake.configureArgs": ["--preset=default"]
+    "cmake.configureArgs": ["--preset=default","--log-level=VERBOSE"]
 }

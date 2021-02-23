@@ -25,10 +25,16 @@ set(CMAKE_DISABLE_SOURCE_CHANGES ON CACHE INTERNAL "Disable changes to sources" 
 set(GLOBAL_DEPENDS_NO_CYCLES ON CACHE INTERNAL "Disallow cyclic dependencies between all targets" FORCE) # https://cmake.org/cmake/help/latest/prop_gbl/GLOBAL_DEPENDS_NO_CYCLES.html
 #set(CMAKE_MESSAGE_CONTEXT_SHOW ON CACHE INTERNAL "Show message context" FORCE) # https://cmake.org/cmake/help/latest/variable/CMAKE_MESSAGE_CONTEXT_SHOW.html#variable:CMAKE_MESSAGE_CONTEXT_SHOW
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE INTERNAL "Default installation prefix!" FORCE)
+endif()
+
 ## CMakeJSON Setup
 set(CMakeJSON_MSG_ERROR_TYPE SEND_ERROR CACHE INTERNAL "CMakeJSON erro message type! (DEFAULT: SEND_ERROR)")
 set(CMakeJSON_MSG_WARNING_TYPE SEND_ERROR CACHE INTERNAL "CMakeJSON warning message type!  (DEFAULT: SEND_ERROR)")
 set(CMakeJSON_MSG_VERBOSE_TYPE VERBOSE CACHE INTERNAL "CMakeJSON VERBOSE message type! (DEFAULT: VERBOSE)")
+mark_as_advanced(CMakeJSON_MSG_ERROR_TYPE CMakeJSON_MSG_WARNING_TYPE CMakeJSON_MSG_VERBOSE_TYPE)
+
 
 option(CMakeJSON_DEBUG "Enable additional debug messages from CMakeJSON" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_RETURN_PARENT "Print variables set to PARENT_SCOPE in cmakejson_return_to_parent_scope (very noise)" ON "CMakeJSON_DEBUG" OFF)
@@ -39,6 +45,13 @@ cmake_dependent_option(CMakeJSON_DEBUG_TARGET "Enable additional debug messages 
 if(CMakeJSON_DEBUG)
     set(CMAKE_MESSAGE_CONTEXT_SHOW ON) # Locally override user value
 endif()
+mark_as_advanced(CMakeJSON_DEBUG
+                 CMakeJSON_DEBUG_RETURN_PARENT
+                 CMakeJSON_DEBUG_PARSE
+                 CMakeJSON_DEBUG_PROJECT
+                 CMakeJSON_DEBUG_PROJECT_OPTIONS
+                 CMakeJSON_DEBUG_TARGET
+)
 
 # Include all CMakeJSON files
 set(cmakejson_cmake_files)

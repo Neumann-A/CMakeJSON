@@ -1,17 +1,17 @@
 {
     "name" : "SimpleProject" ,
+    "package_name" : "SP",
     "homepage" : "https://github.com/Neumann-A/CMakeJSON",
     "version" : "1.0.0",
     "languages" : "C;CXX",
     "options" : [
         { 
             "name" : "Something",
-            "variable" : "WITH_SOMETHING",
             "description" : "build with option something"
         }
     ],
     "list" : [
-        "Library.Target.json",
-        "Executable.Target.json"
+        "Library.target.json",
+        "Executable.target.json"
     ]
 }
