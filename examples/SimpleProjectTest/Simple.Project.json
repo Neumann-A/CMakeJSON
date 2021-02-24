@@ -3,7 +3,7 @@
     "package_name" : "SP",
     "homepage" : "https://github.com/Neumann-A/CMakeJSON",
     "version" : "1.0.0",
-    "languages" : "C;CXX",
+    "languages" : ["C","CXX"],
     "options" : [
         { 
             "name" : "Something",

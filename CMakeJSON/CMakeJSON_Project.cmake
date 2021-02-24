@@ -259,11 +259,12 @@ function(cmakejson_project _input _filename)
         if(DEFINED)
             set(tweak ".${CMakeJSON_PARSE_PROJECT_VERSION_TWEAK}")
         endif()
+        cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_LANGUAGES cmakejson_gather_json_array_as_list languages)
         _project("${CMakeJSON_PARSE_PROJECT_NAME}"
                     VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}${patch}${tweak}"
                     DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}"
                     HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}"
-                    LANGUAGES ${CMakeJSON_PARSE_PROJECT_LANGUAGES}
+                    LANGUAGES ${languages}
                 )
     else()
         if(NOT DEFINED PROJECT_NAME)
