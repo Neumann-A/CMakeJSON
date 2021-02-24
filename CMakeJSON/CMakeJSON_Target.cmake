@@ -126,12 +126,10 @@ function(cmakejson_add_target _input _filename)
         set(IS_INTERFACE_LIBRARY TRUE)
     endif()
 
-    # TODO Some extra CMakeJSON setup
     if(IS_INTERFACE_LIBRARY AND NOT CMakeJSON_PARSE_TARGET_NO_IDE_INTERFACE_TARGET)
         # Create a target for INTERFACE targets so the sources are visible in an IDE
         add_custom_target(${target_name}_IDE DEPENDS ${target_name} SOURCES ${ide_sources})
     endif()
-
 
     if(NOT DEFINED CMakeJSON_PARSE_TARGET_EXPORT)
         set(CMakeJSON_PARSE_TARGET_EXPORT ON)
@@ -163,6 +161,13 @@ function(cmakejson_add_target _input _filename)
                 ${export_options}
                 ${_params})
         unset(_params)
+    endif()
+
+    #TODO: Probably requires more special handling of public includes
+    cmakejson_get_project_property(PROPERTY USAGE_INCLUDE_DIRECTORY)
+    target_include_directories(${target_name} INTERFACE $<INSTALL_INTERFACE:${USAGE_INCLUDE_DIRECTORY}>)
+    if(DEFINED CMakeJSON_PARSE_TARGET_PUBLIC_INCLUDE_DIRECTORY)
+        install(DIRECTORY ${CMakeJSON_PARSE_TARGET_PUBLIC_INCLUDE_DIRECTORY} DESTINATION ${USAGE_INCLUDE_DIRECTORY} COMPONENT Development)
     endif()
 
     cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
