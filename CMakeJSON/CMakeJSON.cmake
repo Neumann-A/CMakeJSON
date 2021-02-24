@@ -38,6 +38,8 @@ mark_as_advanced(CMakeJSON_MSG_ERROR_TYPE CMakeJSON_MSG_WARNING_TYPE CMakeJSON_M
 
 option(CMakeJSON_DEBUG "Enable additional debug messages from CMakeJSON" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_RETURN_PARENT "Print variables set to PARENT_SCOPE in cmakejson_return_to_parent_scope (very noise)" ON "CMakeJSON_DEBUG" OFF)
+cmake_dependent_option(CMakeJSON_DEBUG_HELPERS "Print debug message from helper." ON "CMakeJSON_DEBUG" OFF)
+cmake_dependent_option(CMakeJSON_DEBUG_RANGE_LOOP "Print debug message from range loop." ON "CMakeJSON_DEBUG" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_PARSE "Enable additional debug messages while parsing JSON" ON "CMakeJSON_DEBUG" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_PROJECT "Enable additional debug messages while creating projects/components" ON "CMakeJSON_DEBUG" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_PROJECT_OPTIONS "Enable additional debug messages while creating project options" ON "CMakeJSON_DEBUG" OFF)

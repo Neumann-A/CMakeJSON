@@ -5,8 +5,12 @@ function(cmakejson_validate_target_json _jsoninput)
 endfunction()
 
 function(cmakejson_gather_json_array_as_list _prefix _outvar)
-    list(APPEND ${_outvar} "${${_prefix}}")
-    set(${_outvar} "${${_outvar}}" PARENT_SCOPE)
+    set(element ${${_prefix}})
+    list(APPEND ${_outvar} ${element})
+    set(${_outvar} ${${_outvar}} PARENT_SCOPE)
+endfunction()
+
+function(cmakejson_target_redirection)
 endfunction()
 
 function(cmakejson_add_target _input _filename)
@@ -36,10 +40,9 @@ function(cmakejson_add_target _input _filename)
     set(target_sources)
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_SOURCES cmakejson_gather_json_array_as_list target_sources)
 
-    message("ADDING TARGET: '${CMakeJSON_PARSE_TARGET_NAME}' using '${target_command}' with params '${target_params}'")
-
     set(target_name ${CMakeJSON_PARSE_TARGET_NAME})
     cmake_language(CALL ${target_command} ${target_name} ${target_params} ${target_sources})
+    cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Add target: ${target_command}(${target_name} ${target_params} ${target_sources})")
 
     set(target_command_list include_directories
                             compile_definitions
@@ -52,19 +55,28 @@ function(cmakejson_add_target _input _filename)
         set(_command target_${_command})
         foreach(_access PUBLIC PRIVATE INTERFACE)
             set(_params)
+            cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Checking: CMakeJSON_PARSE_TARGET_${parse_command}_${_access}")
             cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_${parse_command}_${_access} cmakejson_gather_json_array_as_list _params)
             if(_params)
+                cmake_language(EVAL CODE "set(_params ${_params})") # Evaluate variables stored in parsed variables.
+                #list(LENGTH _params _length)
+                #message(STATUS "LENGTH:${_length}") 
+                #if(_length GREATER 1)
+                #    list(GET _params 1 _elem)
+                #    message(STATUS "ELEMENT:${_elem}") 
+                #endif()
+                cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Target command: ${_command}(${target_name} ${_access} ${_params})")
                 cmake_language(CALL ${_command} ${target_name} ${_access} ${_params})
             endif()
+            unset(_params)
         endforeach()
+        unset(parse_command)
     endforeach()
 
     # TODO Some extra CMakeJSON setup
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
-
-
 
 function(cmakejson_target_file _file)
     file(TO_CMAKE_PATH "${_file}" _file)

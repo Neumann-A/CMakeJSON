@@ -32,14 +32,6 @@ function(cmakejson_set_project_parse_defaults _filename)
     endif()
 endfunction()
 
-macro(cmakejson_run_func_over_parsed_range _varprefix _function)
-    math(EXPR range_length "${${_varprefix}_LENGTH}-1")
-    foreach(json_index RANGE ${range_length})
-        cmake_language(CALL ${_function} "${_varprefix}_${json_index}" ${ARGN})
-    endforeach()
-    unset(range_length)
-endmacro()
-
 function(cmakejson_add_dependency _depprefix)
     #TODO
 endfunction()

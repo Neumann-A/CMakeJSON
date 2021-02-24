@@ -19,23 +19,23 @@
             "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>",
             "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         ],
-        "public:" : [ "$<INSTALL_INTERFACE:include>"]
+        "public" : [ "$<INSTALL_INTERFACE:include>" ]
     },
 
     "compile_features" : {
-        "private": [
+        "private" : [
             "cxx_std_17"
         ]
     },
 
-    "compile_defintions" : {
-        "public": [
+    "compile_definitions" : {
+        "public" : [
             "PUBLIC_JUST_TESTING"
         ],
-        "interface": [
+        "interface" : [
             "INTERACE_JUST_TESTING"
         ],
-        "private": [
+        "private" : [
             "PRIVATE_JUST_TESTING"
         ]
     }

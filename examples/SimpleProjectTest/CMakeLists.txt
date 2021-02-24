@@ -12,6 +12,8 @@ include(CMakeJSON)
 
 ### For debugging of CMakeJSON
 set(CMakeJSON_DEBUG_PARSE OFF)
+set(CMakeJSON_DEBUG_RANGE_LOOP OFF)
+set(CMakeJSON_DEBUG_HELPERS OFF)
 set(CMakeJSON_DEBUG_RETURN_PARENT OFF)
 ###
 
