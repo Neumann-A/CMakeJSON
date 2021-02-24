@@ -28,7 +28,14 @@ function(cmakejson_set_project_parse_defaults _filename)
         set(CMakeJSON_PARSE_PROJECT_PKGCONFIG_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" PARENT_SCOPE)
     endif()
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY)
-        set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}" PARENT_SCOPE)
+        if(CMakeJSON_PARSE_PROJECT_VERSIONED_INSTALLED)
+            set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}-${CMakeJSON_PARSE_PROJECT_VERSION}" PARENT_SCOPE)
+        else()
+            set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}" PARENT_SCOPE)
+        endif()
+    endif()
+    if(NOT DEFINED CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION)
+        set(CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -193,6 +200,7 @@ function(cmakejson_setup_project)
     cmakejson_set_project_property(PROPERTY PKGCONFIG_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_PKGCONFIG_INSTALL_DESTINATION}")
 
     cmakejson_set_project_property(PROPERTY USAGE_INCLUDE_DIRECTORY "${CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY}")
+    cmakejson_set_project_property(PROPERTY PUBLIC_HEADER_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION}")
     cmakejson_set_project_property(PROPERTY PUBLIC_CMAKE_MODULE_PATH "${CMakeJSON_PARSE_PROJECT_PUBLIC_CMAKE_MODULE_PATH}")
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
@@ -243,8 +251,16 @@ function(cmakejson_project _input _filename)
     cmakejson_set_project_parse_defaults("${_filename}") # Setup some defaults if nothing has been passed
 
     if(CMakeJSON_USE_PROJECT_OVERRIDE) # Assume manual setup otherwise. 
+        set(patch)
+        if(DEFINED)
+            set(patch ".${CMakeJSON_PARSE_PROJECT_VERSION_PATCH}")
+        endif()
+        set(tweak)
+        if(DEFINED)
+            set(tweak ".${CMakeJSON_PARSE_PROJECT_VERSION_TWEAK}")
+        endif()
         _project("${CMakeJSON_PARSE_PROJECT_NAME}"
-                    VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}"
+                    VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}${patch}${tweak}"
                     DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}"
                     HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}"
                     LANGUAGES ${CMakeJSON_PARSE_PROJECT_LANGUAGES}
@@ -303,6 +319,7 @@ if(CMakeJSON_ENABLE_PROJECT_OVERRIDE)
             get_filename_component(ARGV0_PATH "${ARGV0}" ABSOLUTE)
             if(EXISTS "${ARGV0_PATH}")
                 message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating project from file: '${ARGV0}'")
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ARGV0_PATH}")
                 cmakejson_project_file("${ARGV0_PATH}")
             else() 
                 message(${CMakeJSON_MSG_ERROR_TYPE} "Cannot create project from given arguments! '${ARGN}'")
