@@ -21,7 +21,7 @@ endmacro()
 
 macro(cmakejson_message_if _if)
     if(${_if})
-        message(${ARGN})
+        message("${ARGN}")
     endif()
 endmacro()
 
