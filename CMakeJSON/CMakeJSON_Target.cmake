@@ -4,11 +4,7 @@ function(cmakejson_validate_target_json _jsoninput)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
-function(cmakejson_gather_json_array_as_list _prefix _outvar)
-    set(element ${${_prefix}})
-    list(APPEND ${_outvar} ${element})
-    set(${_outvar} ${${_outvar}} PARENT_SCOPE)
-endfunction()
+
 
 function(cmakejson_gather_json_array_target_link_libraries_as_list _prefix _outvar)
     set(element ${${_prefix}})
@@ -33,6 +29,7 @@ function(cmakejson_add_target _input _filename)
     cmakejson_message_if(CMakeJSON_DEBUG_TARGET_VERBOSE "Variables created by target parse:")
     cmakejson_print_variables_if(CMakeJSON_DEBUG_TARGET_VERBOSE TARGET_PARSED_VARIABLES)
 
+    list(APPEND CMAKE_MESSAGE_CONTEXT "setup")
     if(NOT DEFINED CMakeJSON_PARSE_TARGET_NAME)
         set(CMakeJSON_PARSE_TARGET_NAME "${_filename}")
     else()
@@ -116,6 +113,7 @@ function(cmakejson_add_target _input _filename)
         unset(_params)
         unset(parse_command)
     endforeach()
+    list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
     set(IS_OBJECT_LIBRARY FALSE)
     if(CMakeJSON_PARSE_TARGET_PARAMETERS MATCHES "OBJECT")
