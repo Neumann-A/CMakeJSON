@@ -21,3 +21,5 @@ set(CMakeJSON_DEBUG_TARGET ON)
 ###
 
 project("Simple.Project.json")
+
+feature_summary(WHAT ALL)

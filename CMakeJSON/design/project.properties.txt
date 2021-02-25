@@ -53,8 +53,10 @@ find_package name defaults to PROJECT_NAME if possible
 
 [DEPINFO]
 <DEPENDENCY_NAME>_PKGCONFIG
-<DEPENDENCY_NAME>_DESCRIPTION
+<DEPENDENCY_NAME>_URL # used for set_package_properties //should be set by the module
+<DEPENDENCY_NAME>_DESCRIPTION # used for set_package_properties //should be set by the module
+<DEPENDENCY_NAME>_PURPOSE # used for set_package_properties
 <DEPENDENCY_NAME>_COMPONENTS
 <DEPENDENCY_NAME>_VERSION
-<DEPENDENCY_NAME>_FIND_OPTIONS
+<DEPENDENCY_NAME>_FIND_PARAMETERS
 <DEPENDENCY_NAME>_FIND_PACKAGE

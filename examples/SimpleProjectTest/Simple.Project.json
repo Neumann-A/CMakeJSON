@@ -7,7 +7,8 @@
     "options" : [
         { 
             "name" : "Something",
-            "description" : "build with option something"
+            "description" : "build with option something",
+            "default_value" : "ON"
         }
     ],
     "list" : [
