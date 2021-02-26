@@ -128,7 +128,7 @@ endfunction()
 function(cmakejson_add_dependency _depprefix)
     cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
     cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY REQUIRED_DEPENDENCIES "${dep_name}") # Just in case
-
+    cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "Adding required dependency: ${dep_name}!")
     cmakejson_get_directory_property(PROPERTY ${dep_name}_FOUND)
 
     cmakejson_run_func_over_parsed_range(${_depprefix}_COMPONENTS cmakejson_gather_json_array_as_list components)
@@ -156,6 +156,7 @@ function(cmakejson_add_dependency _depprefix)
     endif()
     list(JOIN find_package_params ";" find_package_str)
     cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_params}")
+    cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "find_package(${find_package_str})")
     find_package(${find_package_str})
     if(DEFINED ${_depprefix}_PURPOSE)
         set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
@@ -168,9 +169,9 @@ function(cmakejson_add_optional_dependency _depprefix _optname)
     cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY OPTIONAL_DEPENDENCIES "${dep_name}") # Just in case
     cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_OPTION "${_optname}")
     cmakejson_get_project_property(PROPERTY OPTION_${_optname}_VARIABLE)
+    cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "Adding optional dependency: ${dep_name}!")
 
     cmakejson_get_directory_property(PROPERTY ${dep_name}_FOUND)
-
     cmakejson_run_func_over_parsed_range(${_depprefix}_COMPONENTS cmakejson_gather_json_array_as_list components)
     cmakejson_run_func_over_parsed_range(${_depprefix}_FIND_PARAMETERS cmakejson_gather_json_array_as_list params)
 
@@ -204,6 +205,7 @@ function(cmakejson_add_optional_dependency _depprefix _optname)
     endif()
     list(JOIN find_package_params ";" find_package_str)
     cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_params}")
+    cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "find_package(${find_package_str} ${disable_package})")
     find_package(${find_package_str} ${disable_package})
 
     if(DEFINED ${_depprefix}_PURPOSE)
@@ -342,7 +344,7 @@ function(cmakejson_setup_project)
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "general")
     # TODO: More Parent project handling!
-    set(PARRENT_PROJECT)
+    set(PARENT_PROJECT)
     cmakejson_get_directory_property(PROPERTY CURRENT_PROJECT)
     if(CURRENT_PROJECT)
         set(PARENT_PROJECT "${CURRENT_PROJECT}")
@@ -358,22 +360,26 @@ function(cmakejson_setup_project)
         message(FATAL_ERROR "'${CURRENT_PROJECT}' does not match '${CMakeJSON_PARSE_PROJECT_NAME}'")
     endif()
     cmakejson_set_directory_property(PROPERTY "${CMakeJSON_PARSE_PROJECT_NAME}_DIRECTORY" "${PROJECT_SOURCE_DIR}")
-    if(PARRENT_PROJECT)
+    if(PARENT_PROJECT)
         cmakejson_set_project_property(PROPERTY PARENT_PROJECT "${PARENT_PROJECT}")
     endif()
-    cmakejson_set_project_property(PROPERTY PACKAGE_NAME "${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}")
-    cmakejson_set_project_property(PROPERTY EXPORT_NAME "${CMakeJSON_PARSE_PROJECT_EXPORT_NAME}")
-    cmakejson_set_project_property(PROPERTY EXPORT_NAMESPACE "${CMakeJSON_PARSE_PROJECT_EXPORT_NAMESPACE}")
-
-    cmakejson_set_project_property(PROPERTY VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}")
-    cmakejson_set_project_property(PROPERTY VERSION_COMPATIBILITY "${CMakeJSON_PARSE_PROJECT_VERSION_COMPATIBILITY}")
-
-    cmakejson_set_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INSTALL_DESTINATION}")
-    cmakejson_set_project_property(PROPERTY PKGCONFIG_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_PKGCONFIG_INSTALL_DESTINATION}")
-
-    cmakejson_set_project_property(PROPERTY USAGE_INCLUDE_DIRECTORY "${CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY}")
-    cmakejson_set_project_property(PROPERTY PUBLIC_HEADER_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION}")
-    cmakejson_set_project_property(PROPERTY PUBLIC_CMAKE_MODULE_PATH "${CMakeJSON_PARSE_PROJECT_PUBLIC_CMAKE_MODULE_PATH}")
+    set(project_properties DESCRIPTION
+                           HOMEPAGE
+                           PACKAGE_NAME
+                           EXPORT_NAME
+                           EXPORT_NAMESPACE
+                           VERSION
+                           VERSION_COMPATIBILITY
+                           CMAKE_CONFIG_INSTALL_DESTINATION
+                           PKGCONFIG_INSTALL_DESTINATION
+                           USAGE_INCLUDE_DIRECTORY
+                           PUBLIC_HEADER_INSTALL_DESTINATION
+                           PUBLIC_CMAKE_MODULE_PATH)
+    foreach(_prop IN LISTS project_properties)
+        if(DEFINED CMakeJSON_PARSE_PROJECT_${_prop})
+            cmakejson_set_project_property(PROPERTY ${_prop}  "${CMakeJSON_PARSE_PROJECT_${_prop}}")
+        endif()
+    endforeach()
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "deps")
@@ -555,9 +561,9 @@ function(cmakejson_generate_project_config)
             string(APPEND _config_contents "set_package_properties(\${CMAKE_FIND_PACKAGE_NAME} PROPERTIES\n"
                                            "                       DESCRIPTION ${CMakeJSON_PARSE_PROJECT_DESCRIPTION}\n")
         endif()
-        if(CMakeJSON_PARSE_PROJECT_URL)
+        if(CMakeJSON_PARSE_PROJECT_HOMEPAGE)
             string(APPEND _config_contents "set_package_properties(\${CMAKE_FIND_PACKAGE_NAME} PROPERTIES\n"
-                                           "                       URL ${CMakeJSON_PARSE_PROJECT_URL})\n")
+                                           "                       URL ${CMakeJSON_PARSE_PROJECT_HOMEPAGE})\n")
         endif()
 
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}Config.in.cmake" "${_config_contents}")
@@ -740,11 +746,24 @@ function(cmakejson_close_project)
     endforeach()
 
     # Disable find_package for internally available packages. 
-    set(CMAKE_DISABLE_FIND_PACKAGE_${PACKAGE_NAME} TRUE CACHE INTERNAL "" FORCE)
-    set(${PACKAGE_NAME}_FOUND TRUE CACHE INTERNAL "" FORCE)
-    cmakejson_set_directory_property(PROPERTY ${PACKAGE_NAME}_FOUND TRUE)
-    set_property(GLOBAL APPEND PROPERTY PACKAGES_FOUND ${PACKAGE_NAME})
-
+    if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+        set(CMAKE_DISABLE_FIND_PACKAGE_${PACKAGE_NAME} TRUE CACHE INTERNAL "" FORCE)
+        set(${PACKAGE_NAME}_FOUND TRUE CACHE INTERNAL "" FORCE)
+        cmakejson_set_directory_property(PROPERTY ${PACKAGE_NAME}_FOUND TRUE)
+        set_property(GLOBAL APPEND PROPERTY PACKAGES_FOUND ${PACKAGE_NAME})
+        cmakejson_get_project_property(PROPERTY DESCRIPTION)
+        cmakejson_get_project_property(PROPERTY HOMEPAGE)
+        message("blablub ${DESCRIPTION} ${HOMEPAGE}")
+        set_package_properties(${PACKAGE_NAME} PROPERTIES
+                       DESCRIPTION "${DESCRIPTION}"
+                       URL "${HOMEPAGE}")
+    endif()
+    cmakejson_get_project_property(PROPERTY PARENT_PROJECT)
+    if(PARENT_PROJECT)
+        cmakejson_set_directory_property(PROPERTY CURRENT_PROJECT "${PARENT_PROJECT}")
+    else()
+        cmakejson_set_directory_property(PROPERTY CURRENT_PROJECT "")
+    endif()
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
@@ -803,6 +822,7 @@ function(cmakejson_project _input _filename)
     #        return()
     #    endif()
     #endif()
+    cmakejson_generate_project_config()
     cmakejson_close_project()
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)

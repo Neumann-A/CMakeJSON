@@ -7,6 +7,7 @@ include(CMakeDependentOption) # https://cmake.org/cmake/help/latest/module/CMake
 include(FeatureSummary) # https://cmake.org/cmake/help/latest/module/FeatureSummary.html
 #set(FeatureSummary_DEFAULT_PKG_TYPE REQUIRED CACHE INTERNAL "" FORCE)
 include(CMakePrintHelpers) # https://cmake.org/cmake/help/latest/module/CMakePrintHelpers.html
+include(GNUInstallDirs)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON) # Enable folder layout as source layout in IDEs supporting it # https://cmake.org/cmake/help/latest/prop_gbl/USE_FOLDERS.html
 set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${CMAKE_BINARY_DIR}/undef_properties.log")
