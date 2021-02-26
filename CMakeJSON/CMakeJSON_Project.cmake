@@ -662,7 +662,7 @@ function(cmakejson_close_project)
     endif()
 
     cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
-    cmakejson_get_project_property(PROPERTY NAMESPACE)
+    cmakejson_get_project_property(PROPERTY EXPORT_NAMESPACE)
     cmakejson_get_project_property(PROPERTY EXPORT_NAME)
     cmakejson_get_project_property(PROPERTY EXPORTED_TARGETS)
     cmakejson_get_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION)
@@ -725,9 +725,10 @@ function(cmakejson_close_project)
     # endif()
 
     # This only exists @ install time
+    message(STATUS "EXPORTED_TARGETS:${EXPORTED_TARGETS}")
     if(EXPORTED_TARGETS)
         install(EXPORT ${EXPORT_NAME}
-                NAMESPACE ${NAMESPACE}:: 
+                NAMESPACE ${EXPORT_NAMESPACE}:: 
                 FILE ${PACKAGE_NAME}Targets.cmake 
                 DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}")
                 
@@ -739,9 +740,10 @@ function(cmakejson_close_project)
     foreach(_target IN LISTS EXPORTED_TARGETS)
         get_target_property(IS_EXECUTABLE ${_target} TYPE)
         if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
-            add_executable(${NAMESPACE}::${_target} ALIAS ${_target})
+            add_executable(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
         else()
-            add_library(${NAMESPACE}::${_target} ALIAS ${_target})
+            message(STATUS "${EXPORT_NAMESPACE}::${_target} ALIAS ${_target}")
+            add_library(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
         endif()
     endforeach()
 
