@@ -1,0 +1,29 @@
+{
+    "name" : "SimpleProjectWithDep" ,
+    "package_name" : "SPWD",
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "Simple project with dependency to show off CMakeJSON",
+    "version" : "1.0.0",
+    "languages" : ["C","CXX"],
+    "options" : [
+        { 
+            "name" : "SomethingElse",
+            "description" : "build with option something else",
+            "default_value" : "OFF"
+        },
+        { 
+            "name" : "use-me",
+            "description" : "needs me",
+            "default_value" : "ON",
+            "dependencies": [ 
+                "ME"
+            ]
+        }
+    ],
+    "dependencies": [
+        "SP"
+    ],
+    "list" : [
+        "Executable.target.json"
+    ]
+}

@@ -161,7 +161,7 @@ function(cmakejson_add_dependency _depprefix)
     if(DEFINED ${_depprefix}_PURPOSE)
         set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
     endif()
-    set_package_properties(${_package} PROPERTIES TYPE REQUIRED)
+    set_package_properties(${dep_name} PROPERTIES TYPE REQUIRED)
 endfunction()
 
 function(cmakejson_add_optional_dependency _depprefix _optname)

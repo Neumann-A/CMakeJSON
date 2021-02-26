@@ -1,0 +1,3 @@
+
+message(STATUS "You found me! As '${CMAKE_FIND_PACKAGE_NAME}'")
+set(${CMAKE_FIND_PACKAGE_NAME}_FOUND TRUE)
