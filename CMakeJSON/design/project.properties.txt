@@ -11,9 +11,9 @@ PROJECT_OVERRIDE (INHERITED) # decides wether the PROJECT_OVERRIDE is enabled
 
 CURRENT_PROJECT (INHERITED) # only set if not closed. name of the current project
 CURRENT_PROJECT_DIRECTORY (INHERITED) # only set if not closed. name of the current project
-PARENT_PROJECT (INHERITED) 
-CHILD_PROJECTS (INHERITED)
-
+<PROJECT_NAME>_PARENT_PROJECT (INHERITED) 
+<PROJECT_NAME>_CHILD_PROJECTS (INHERITED)
+<PROJECT_NAME>_CHILD_<CHILD_NAME>_DIRECTORY
 
 set if CMakeJSON_CURRENT_PROJECT is set and thus updated. 
 It is assumed that the new project is a subproject/subcomponent. 
