@@ -87,7 +87,7 @@ function(cmakejson_set_project_parse_defaults _filename)
     endif()
 endfunction()
 
-function(cmakejson_add_dependency _depprefix)
+function(cmakejson_setup_project_common_dependency_properties _depprefix _out_depname)
     if(DEFINED ${_depprefix})
         set(dep_name ${${_depprefix}})
     elseif(DEFINED ${_depprefix}_NAME)
@@ -95,20 +95,51 @@ function(cmakejson_add_dependency _depprefix)
     else()
         message(${CMakeJSON_MSG_ERROR_TYPE} "Dependency parsed as '${_depprefix}' is missing a name!")
     endif()
-
     set(dep_infos PKG_CONFIG_NAME DESCRIPTION PURPOSE COMPONENTS VERSION FIND_OPTIONS)
     foreach(dep_info IN LISTS dep_infos)
         if(DEFINED ${_depprefix}_${dep_info})
             cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_${dep_info} "${${_depprefix}_${dep_info}}")
         endif()
     endforeach()
+    cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY DEPENDENCIES "${dep_name}")
+
+    set(${_out_depname} "${dep_name}" PARENT_SCOPE)
+endfunction()
+
+function(cmakejson_generate_find_package_string _depprefix _out_string)
+    if(DEFINED ${_depprefix})
+        set(dep_name ${${_depprefix}})
+    elseif(DEFINED ${_depprefix}_NAME)
+        set(dep_name ${${_depprefix}_NAME})
+    else()
+        message(${CMakeJSON_MSG_ERROR_TYPE} "Dependency parsed as '${_depprefix}' is missing a name!")
+    endif()
+    set(dep_infos PKG_CONFIG_NAME DESCRIPTION PURPOSE COMPONENTS VERSION FIND_OPTIONS)
+    foreach(dep_info IN LISTS dep_infos)
+        if(DEFINED ${_depprefix}_${dep_info})
+            cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_${dep_info} "${${_depprefix}_${dep_info}}")
+        endif()
+    endforeach()
+    cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY DEPENDENCIES "${dep_name}")
+
+    set(${_out_depname} "${dep_name}" PARENT_SCOPE)
+endfunction()
+
+function(cmakejson_add_dependency _depprefix)
+    cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
+    cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY REQUIRED_DEPENDENCIES "${dep_name}") # Just in case
+
     cmakejson_get_directory_property(PROPERTY ${dep_name}_FOUND)
+
+    cmakejson_run_func_over_parsed_range(${_depprefix}_COMPONENTS cmakejson_gather_json_array_as_list components)
+    cmakejson_run_func_over_parsed_range(${_depprefix}_FIND_PARAMETERS cmakejson_gather_json_array_as_list params)
+
     set(find_package_params "${dep_name}")
     if(NOT DEFINED ${_depprefix}_VERSION)
         list(APPEND find_package_params ${${_depprefix}_VERSION})
     endif()
     if(${dep_name}_FOUND) # Internal to remove REQUIRED parameter
-        foreach(_comp IN LISTS ${${_depprefix}_COMPONENTS)
+        foreach(_comp IN LISTS ${components})
             cmakejson_get_directory_property(PROPERTY ${dep_name}_${_comp}_FOUND)
             if(NOT ${dep_name}_${_comp}_FOUND)
                 message(${CMakeJSON_MSG_ERROR_TYPE} "'${dep_name}' was found but required component '${_comp}' was not found!\nPlease re-check your build options for '${dep_name}' and the current project!")
@@ -117,45 +148,68 @@ function(cmakejson_add_dependency _depprefix)
     else()
         list(APPEND find_package_params REQUIRED)
     endif()
-    cmakejson_run_func_over_parsed_range(${_depprefix}_COMPONENTS cmakejson_gather_json_array_as_list components)
     if(components)
         list(APPEND find_package_params COMPONENTS ${components})
     endif()
-    cmakejson_run_func_over_parsed_range(${_depprefix}_FIND_PARAMETERS cmakejson_gather_json_array_as_list params)
     if(params)
         list(APPEND find_package_params ${params})
     endif()
     list(JOIN find_package_params ";" find_package_str)
-    cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_str}")
+    cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_params}")
     find_package(${find_package_str})
     if(DEFINED ${_depprefix}_PURPOSE)
         set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
     endif()
-    # if(DEFINED ${_depprefix}_URL)
-    #     set_package_properties(${dep_name} PROPERTIES URL "${${_depprefix}_URL}")
-    # endif()
-    # if(DEFINED ${_depprefix}_DESCRIPTION)
-    #     set_package_properties(${dep_name} PROPERTIES DESCRIPTION "${${_depprefix}_DESCRIPTION}")
-    # endif()
-    # [DEPINFO]
-    # <DEPENDENCY_NAME>_PKGCONFIG
-    # <DEPENDENCY_NAME>_DESCRIPTION
-    # <DEPENDENCY_NAME>_COMPONENTS
-    # <DEPENDENCY_NAME>_VERSION
-    # <DEPENDENCY_NAME>_FIND_PARAMETERS
-    # <DEPENDENCY_NAME>_FIND_PACKAGE
-    #TODO
-    #cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY OPTIONS "${${_optprefix}_NAME}")
-    #cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_VARIABLE" )
-    #cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_DEFAULT_VALUE" )
-    #cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_DESCRIPTION" )
-    #cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_CONDITION" )
-
-    cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY DEPENDENCIES "${dep_name}")
+    set_package_properties(${_package} PROPERTIES TYPE REQUIRED)
 endfunction()
 
 function(cmakejson_add_optional_dependency _depprefix _optname)
-    #TODO
+    cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
+    cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY OPTIONAL_DEPENDENCIES "${dep_name}") # Just in case
+    cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_OPTION "${_optname}")
+    cmakejson_get_project_property(PROPERTY OPTION_${_optname}_VARIABLE)
+
+    cmakejson_get_directory_property(PROPERTY ${dep_name}_FOUND)
+
+    cmakejson_run_func_over_parsed_range(${_depprefix}_COMPONENTS cmakejson_gather_json_array_as_list components)
+    cmakejson_run_func_over_parsed_range(${_depprefix}_FIND_PARAMETERS cmakejson_gather_json_array_as_list params)
+
+    set(find_package_params "${dep_name}")
+    if(NOT DEFINED ${_depprefix}_VERSION)
+        list(APPEND find_package_params ${${_depprefix}_VERSION})
+    endif()
+    set(disable_package)
+    if(${dep_name}_FOUND) # Internal to remove REQUIRED parameter
+        foreach(_comp IN LISTS ${components})
+            cmakejson_get_directory_property(PROPERTY ${dep_name}_${_comp}_FOUND)
+            if(NOT ${dep_name}_${_comp}_FOUND)
+                message(${CMakeJSON_MSG_ERROR_TYPE} "'${dep_name}' was found but required component '${_comp}' was not found!\nPlease re-check your build options for '${dep_name}' and the current project!")
+            endif()
+        endforeach()
+    else()
+        if(${OPTION_${_optname}_VARIABLE})
+            list(APPEND find_package_params REQUIRED)
+        else()
+            # CMAKE_DISABLE_FIND_PACKAGE_<package> does deactivate find_package completly 
+            # which also means that feature_summary will not pick it up
+            # So NO_DEFAULT_PATH is used here so that the package is not found.
+            set(disable_package NO_DEFAULT_PATH)
+        endif()
+    endif()
+    if(components)
+        list(APPEND find_package_params COMPONENTS ${components})
+    endif()
+    if(params)
+        list(APPEND find_package_params ${params})
+    endif()
+    list(JOIN find_package_params ";" find_package_str)
+    cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_params}")
+    find_package(${find_package_str} ${disable_package})
+
+    if(DEFINED ${_depprefix}_PURPOSE)
+        set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
+    endif()
+    set_package_properties(${_package} PROPERTIES TYPE OPTIONAL)
 endfunction()
 
 function(cmakejson_project_option_setup _optprefix)
@@ -206,17 +260,20 @@ function(cmakejson_project_option_setup _optprefix)
             add_feature_info("${${_optprefix}_NAME}" "${${_optprefix}_VARIABLE}" "${${_optprefix}_DESCRIPTION}")
         endif()
         cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY OPTIONS "${${_optprefix}_NAME}")
-        cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_VARIABLE" )
-        cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_DEFAULT_VALUE" )
-        cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_DESCRIPTION" )
-        cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_CONDITION" )
-        if(${${_optprefix}_DEPENDENCIES})
-            cmakejson_run_func_over_parsed_range(${_optprefix}_DEPENDENCIES cmakejson_add_optional_dependency OPTION_${${_optprefix}_NAME})
-        endif()
-        if(${${_optprefix}_VARIABLE})
-            # TODO: Do something?
-        endif()
 
+        set(opt_props VARIABLE DEFAULT_VALUE DESCRIPTION CONDITION EXPORT)
+        foreach(prop IN LISTS opt_props)
+            if(DEFINED ${_optprefix}_${prop})
+                cmakejson_set_project_property(PROPERTY "OPTION_${${_optprefix}_NAME}_${prop}" "${${_optprefix}_${prop}}")
+            endif()
+        endforeach()
+
+        if(${${_optprefix}_DEPENDENCIES})
+            cmakejson_run_func_over_parsed_range(${_optprefix}_DEPENDENCIES cmakejson_add_optional_dependency ${${_optprefix}_NAME})
+        endif()
+        # if(${${_optprefix}_VARIABLE} AND DEFINED ${_optprefix}_CODE)
+        #     # TODO: Do something?
+        # endif()
     else()
         if(NOT DEFINED ${_optprefix}_DEFAULT_VALUE)
             message(${CMakeJSON_MSG_WARNING_TYPE} "Missing 'default_value' for option '${${_optprefix}_VARIABLE}'! Assuming empty string.")
@@ -291,6 +348,8 @@ function(cmakejson_setup_project)
         set(PARENT_PROJECT "${CURRENT_PROJECT}")
         cmakejson_message_if(CMakeJSON_DEBUG_PROJECT VERBOSE "Adding '${CMakeJSON_PARSE_PROJECT_NAME}' as a subporject to '${CURRENT_PROJECT}'")
         cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY CHILD_PROJECTS "${CMakeJSON_PARSE_PROJECT_NAME}")
+        cmakejson_set_project_property(PROPERTY CHILD_${CMakeJSON_PARSE_PROJECT_NAME}_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+        cmakejson_set_project_property(PROPERTY CHILD_${CMakeJSON_PARSE_PROJECT_NAME}_PACKAGE_NAME "${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}")
     endif()
 
     cmakejson_set_directory_property(PROPERTY CURRENT_PROJECT "${CMakeJSON_PARSE_PROJECT_NAME}")
@@ -337,11 +396,263 @@ endfunction()
 
 function(cmakejson_generate_project_config)
     list(APPEND CMAKE_MESSAGE_CONTEXT "generate_config")
+
+    cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
+    cmakejson_get_project_property(PROPERTY EXPORT_NAME)
+    cmakejson_get_project_property(PROPERTY PUBLIC_CMAKE_MODULE_PATH)
+    cmakejson_get_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION)
+
+    cmakejson_get_project_property(PROPERTY OPTIONS) # Check if the option is exported
+
+    if(IS_ABSOLUTE "${CMAKE_CONFIG_INSTALL_DESTINATION}")
+        message(${CMakeJSON_MSG_ERROR_TYPE} "Member 'cmake_config_install_destination' destination needs to be relative! Value:'${CMAKE_CONFIG_INSTALL_DESTINATION}'")
+    endif()
+
+    set(EXPORTED_CONFIG_VARS)
+    set(EXPORTED_CONFIG_PATH_VARS)
+
+    if(NOT DEFINED CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INPUT)
+        set(_config_contents)
+        string(APPEND _config_contents "#This file was automatically generated by CMakeCS!\n")
+        string(APPEND _config_contents "@PACKAGE_INIT@\n")
+        string(APPEND _config_contents "cmake_policy (PUSH)\n")
+        string(APPEND _config_contents "cmake_minimum_required (VERSION 3.19)\n\n")
+        list(APPEND ${PROJECT_NAME}_CONFIG_VARS CMAKE_CURRENT_LIST_FILE)
+        if(PUBLIC_CMAKE_MODULE_PATH)
+            list(APPEND ${PROJECT_NAME}_CONFIG_VARS \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH)
+            string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}/cmake\")\n")        
+            string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH_BACKUP \${CMAKE_MODULE_PATH})\n")
+            string(APPEND _config_contents "list(PREPEND CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}/cmake\")\n") # Prepending makes sure we get the correct modules
+            # string(APPEND _config_contents "if(0)\n") #@${PROJECT_NAME}_BUILD_DIR_CONFIG@
+            # foreach(_dir IN LISTS PUBLIC_CMAKE_MODULE_PATH)
+            #     if(IS_ABSOLUTE "${_dir}")
+            #         string(APPEND _config_contents "    list(PREPEND CMAKE_MODULE_PATH \"${_dir}\")\n")
+            #         string(APPEND _config_contents "    list(APPEND \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"${_dir}\")\n")
+            #     else()
+            #         string(APPEND _config_contents "    list(PREPEND CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/${_dir}\")\n")
+            #         string(APPEND _config_contents "    list(PREPEND CMAKE_MODULE_PATH \"${CMAKE_CURRENT_BINARY_DIR}/${_dir}\")\n")
+            #         string(APPEND _config_contents "    list(APPEND \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/${_dir}\")\n")
+            #         string(APPEND _config_contents "    list(APPEND \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"${CMAKE_CURRENT_BINARY_DIR}/${_dir}\")\n")
+            #     endif()
+            # endforeach()
+            # string(APPEND _config_contents "endif()\n")
+            string(APPEND _config_contents "list(REMOVE_DUPLICATES CMAKE_MODULE_PATH)\n")
+            string(APPEND _config_contents "list(REMOVE_DUPLICATES \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH)\n")
+            string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"\${\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH}\" CACHE INTERNAL \"\")\n\n")   
+        endif()
+
+        string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_BUILD_AS_SHARED @BUILD_SHARED_LIBS@ CACHE INTERNAL \"\")\n")     
+        #string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_BUILD_DIR_CONFIG 0) # Is config within build dir?\n")
+        foreach(_opt IN LISTS OPTIONS)
+            cmakejson_get_project_property(PROPERTY ${_opt}_TYPE)
+            cmakejson_get_project_property(PROPERTY ${_opt}_VARIABLE)
+            cmakejson_get_project_property(PROPERTY ${_opt}_EXPORT)
+            set(_var ${${_opt}_VARIABLE})
+            set(_set_var "set")
+            set(_var_package)
+            if ${_opt}_TYPE STREQUAL "PATH")
+                set(_set_var set_and_check)
+                set(_var_package PACKAGE_)
+                if(${_opt}_EXPORT)
+                    list(APPEND EXPORTED_CONFIG_PATH_VARS \${CMAKE_FIND_PACKAGE_NAME}_${_var})
+                endif()
+            endif()
+            if(${_opt}_EXPORT)
+                string(APPEND _config_contents "${_set_var}(\${CMAKE_FIND_PACKAGE_NAME}_${_var} @${_var_package}${_var}@ CACHE INTERNAL \"\")\n")
+                list(APPEND EXPORTED_CONFIG_VARS \${CMAKE_FIND_PACKAGE_NAME}_${_var})
+            else()
+                string(APPEND _config_contents "${_set_var}(\${CMAKE_FIND_PACKAGE_NAME}_${_var} @${_var_package}${_var}@)\n")
+            endif()
+            unset(_var)
+            unset(_set_var)
+            unset(_var_package)
+            unset(${_opt}_VARIABLE)
+            unset(${_opt}_EXPORT)
+            unset(${_opt}_TYPE)
+        endforeach()
+
+        # string(APPEND _config_contents "\n # Deal with modules to include\n")
+        # foreach(_module IN LISTS ${PROJECT_NAME}_MODULES_TO_INCLUDE)
+        #     string(APPEND _config_contents "option(\${CMAKE_FIND_PACKAGE_NAME}_WITHOUT_CMAKE_MODULE_${_module} \"Deactivate inclusion of module ${_module} for \${CMAKE_FIND_PACKAGE_NAME} \" OFF)\n")
+        #     string(APPEND _config_contents "if(NOT \${CMAKE_FIND_PACKAGE_NAME}_WITHOUT_CMAKE_MODULE_${_module})\n")
+        #     string(APPEND _config_contents "    include(${_module})\n")
+        #     string(APPEND _config_contents "endif()\n")
+        # endforeach()
+
+        # Deal with dependencies
+        cmakejson_get_project_property(PROPERTY DEPENDENCIES)
+        string(APPEND _config_contents "\n # Deal with dependencies \n")
+        string(APPEND _config_contents "include(CMakeFindDependencyMacro)\n")
+        string(APPEND _config_contents "\n # Dependencies \n")
+        # Write find_dependency calls fo required packages
+        foreach(_dep IN LISTS DEPENDENCIES)
+            cmakejson_get_project_property(PROPERTY DEPENDENCY_${_dep}_FIND_PACKAGE)
+            cmakejson_get_project_property(PROPERTY DEPENDENCY_${_dep}_OPTION)
+            if(DEPENDENCY_${_dep}_OPTION)
+                cmakejson_get_project_property(PROPERTY OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
+                string(APPEND _config_contents "if(@${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE}@)\n  ")
+            endif()
+            list(REMOVE_ITEM DEPENDENCY_${_dep}_FIND_PACKAGE REQUIRED)
+            string(APPEND _config_contents "find_dependency(")
+            string(APPEND _config_contents "${DEPENDENCY_${_dep}_FIND_PACKAGE}")
+            string(APPEND _config_contents ")\n")
+            if(DEPENDENCY_${_dep}_OPTION)
+                string(APPEND _config_contents "endif(@${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE}@)\n  ")
+                unset(OPTION_${DEPENDENCY_${_dep}_OPTION)
+                unset(OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
+            endif()
+            unset(DEPENDENCY_${_dep}_FIND_PACKAGE)
+        endforeach()
+
+        # Deal with components
+        cmakejson_get_project_property(PROPERTY CHILD_PROJECTS)
+        if(CHILD_PROJECTS)
+            set(_available_components )
+            string(APPEND _config_contents "\n # Deal with components \n")
+            foreach(_child IN LISTS CHILD_PROJECTS)
+                cmakejson_get_project_property(PROPERTY CHILD_${_child}_PACKAGE_NAME)
+                set(_component "${CHILD_${_child}_PACKAGE_NAME}")
+                list(APPEND _available_components ${_component})
+                string(APPEND _config_contents "find_dependency(${PACKAGE_NAME}_${_component}\n")
+                string(APPEND _config_contents "                HINTS \${CMAKE_CURRENT_LIST_DIR}/components\n")
+                string(APPEND _config_contents "                )\n\n")
+                unset(CHILD_${_child}_PACKAGE_NAME)
+            endforeach() 
+            string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_AVAILABLE_COMPONENTS ${_available_components})\n")
+            string(APPEND _config_contents "check_required_components(\${CMAKE_FIND_PACKAGE_NAME})\n")
+            unset(_available_components)
+            unset(CHILD_PROJECTS)
+        else()
+            set(COMPONENT_OPTION NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+        endif(CHILD_PROJECTS)
+
+        string(APPEND _config_contents "\n # Finish up \n")
+        cmakejson_get_project_property(PROPERTY EXPORTED_TARGETS)
+        if(EXPORTED_TARGETS)
+            string(APPEND _config_contents "include(\${CMAKE_CURRENT_LIST_DIR}/${PACKAGE_NAME}Targets.cmake)\n")
+        endif()
+
+        # if(${_VAR_PREFIX}_SETUP_MODULE_PATH)
+        #     string(APPEND _config_contents "set(CMAKE_MODULE_PATH \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH_BACKUP)\n") # Restoring old module path
+        # endif()
+        # if(${PROJECT_NAME}_PUBLIC_MODULE_DIRECTORIES)
+        #     set(CMAKE_PUBLIC_MODULES)
+        #     foreach(_module_path IN LISTS ${PROJECT_NAME}_PUBLIC_MODULE_DIRECTORIES)
+        #         list(APPEND CMAKE_PUBLIC_MODULES "\${CMAKE_CURRENT_LIST_DIR}/${_module_path}")
+        #     endforeach()
+        #     string(APPEND _config_contents "set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH} ${CMAKE_PUBLIC_MODULES})\n")
+        # endif()
+
+        string(APPEND _config_contents "find_package_handle_standard_args(\${CMAKE_FIND_PACKAGE_NAME} HANDLE_COMPONENTS\n")
+        if(EXPORTED_CONFIG_VARS)
+            string(APPEND _config_contents "                                  REQUIRED_VARS @${EXPORTED_CONFIG_VARS}@\n")
+        endif()
+        string(APPEND _config_contents "                                  )\n")
+        string(APPEND _config_contents "cmake_policy (POP)\n")
+        #string(APPEND _config_contents "unset(_\${CMAKE_FIND_PACKAGE_NAME}_SEARCHING)\n")
+
+        if(CMakeJSON_PARSE_PROJECT_DESCRIPTION)
+            string(APPEND _config_contents "set_package_properties(\${CMAKE_FIND_PACKAGE_NAME} PROPERTIES\n"
+                                           "                       DESCRIPTION ${CMakeJSON_PARSE_PROJECT_DESCRIPTION}\n")
+        endif()
+        if(CMakeJSON_PARSE_PROJECT_URL)
+            string(APPEND _config_contents "set_package_properties(\${CMAKE_FIND_PACKAGE_NAME} PROPERTIES\n"
+                                           "                       URL ${CMakeJSON_PARSE_PROJECT_URL})\n")
+        endif()
+
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}Config.in.cmake" "${_config_contents}")
+        set(CMAKE_INPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}Config.in.cmake")
+    else()
+        set(CMAKE_INPUT_FILE "${CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INPUT}")
+        foreach(_opt IN LISTS OPTIONS)
+            cmakejson_get_project_property(PROPERTY ${_opt}_TYPE)
+            cmakejson_get_project_property(PROPERTY ${_opt}_VARIABLE)
+            cmakejson_get_project_property(PROPERTY ${_opt}_EXPORT)
+            set(_var ${${_opt}_VARIABLE})
+            if ${_opt}_TYPE STREQUAL "PATH" AND ${_opt}_EXPORT)
+                list(APPEND EXPORTED_CONFIG_PATH_VARS \${CMAKE_FIND_PACKAGE_NAME}_${_var})
+            elseif(${_opt}_EXPORT)
+                list(APPEND EXPORTED_CONFIG_VARS \${CMAKE_FIND_PACKAGE_NAME}_${_var})
+            endif()
+            unset(_var)
+            unset(${_opt}_VARIABLE)
+            unset(${_opt}_EXPORT)
+            unset(${_opt}_TYPE)
+        endforeach()
+    endif(NOT DEFINED CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INPUT)
+
+    file(RELATIVE_PATH REL_CONFIG_PATH  "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+
+    set(NO_SET_CHECK)
+    if(NOT EXPORTED_CONFIG_PATH_VARS)
+        set(NO_SET_CHECK NO_SET_AND_CHECK_MACRO)
+    endif()
+    set(PATH_VARS)
+    if(EXPORTED_CONFIG_PATH_VARS)
+        set(PATH_VARS PATH_VARS ${EXPORTED_CONFIG_PATH_VARS})
+    endif()
+    # Write install config file 
+    configure_package_config_file(
+            "${CMAKE_INPUT_FILE}"
+            "${CMAKE_CONFIG_INSTALL_DESTINATION}/${PACKAGE_NAME}Config.install.cmake"
+            INSTALL_DESTINATION "$<INSTALL_INTERFACE:${CMAKE_CONFIG_INSTALL_DESTINATION}>"
+            ${PATH_VARS}
+            ${COMPONENT_OPTION}
+            ${NO_SET_CHECK}
+            )
+    # cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_EXPORT_ON_BUILD)
+    # # Config in build dir!
+    # if(${PROJECT_NAME}_EXPORT_ON_BUILD)
+    #     set(${PROJECT_NAME}_RELATIVE_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+    #     set(${PROJECT_NAME}_BUILD_DIR_CONFIG TRUE)
+    #     configure_package_config_file(
+    #             "${${_VAR_PREFIX}_INPUT_FILE}"
+    #             "${${_VAR_PREFIX}_INSTALL_DESTINATION}/${${PROJECT_NAME}_PACKAGE_NAME}Config.cmake"
+    #             INSTALL_DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}"
+    #             #INSTALL_DESTINATION "$<BUILD_INTERFACE:${REL_CONFIG_PATH}/${${_VAR_PREFIX}_INSTALL_DESTINATION}>"
+    #             PATH_VARS ${${_VAR_PREFIX}_PATH_VARS} ${PROJECT_NAME}_RELATIVE_SOURCE_PATH 
+    #             ${${_VAR_PREFIX}_NO_COMPONENTS}
+    #             ${${_VAR_PREFIX}_NO_SET_CHECK}
+    #             INSTALL_PREFIX "${CMAKE_SOURCE_DIR}"
+    #             )
+    # endif()  
+    # Write ConfigVersion
+    #cmcs_variable_exists_or_error(PREFIX "${_VAR_PREFIX}" VARIABLE_NAMES "")
+
+    cmakejson_get_project_property(PROPERTY VERSION)
+    cmakejson_get_project_property(PROPERTY VERSION_COMPATIBILITY)
+
+    if(VERSION AND VERSION_COMPATIBILITY)
+        write_basic_package_version_file("${CMAKE_CONFIG_INSTALL_DESTINATION}/${PACKAGE_NAME}ConfigVersion.cmake"
+                                        VERSION ${VERSION} 
+                                        COMPATIBILITY ${VERSION_COMPATIBILITY})
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CONFIG_INSTALL_DESTINATION}/${PACKAGE_NAME}ConfigVersion.cmake"
+                                        DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}" )
+    elseif(VERSION OR VERSION_COMPATIBILITY)
+        message(${CMakeJSON_MSG_ERROR_TYPE} "Cannot define VERSION or VERSION_COMPATIBILITY without setting both!")
+    endif()
+                                     
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CONFIG_INSTALL_DESTINATION}/${PACKAGE_NAME}Config.install.cmake"
+            DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}"
+            RENAME "${PACKAGE_NAME}Config.cmake")
+
+    # if(${PROJECT_NAME}_PUBLIC_CMAKE_FILES)
+    #     install(FILES "${${PROJECT_NAME}_PUBLIC_CMAKE_FILES}"
+    #             DESTINATION "${${_VAR_PREFIX}_INSTALL_DESTINATION}/cmake")
+    # endif()
+    # if(${PROJECT_NAME}_PUBLIC_CMAKE_DIRS)
+    #     install(DIRECTORY "${${PROJECT_NAME}_PUBLIC_CMAKE_DIRS}"
+    #             DESTINATION "${${_VAR_PREFIX}_INSTALL_DESTINATION}/cmake") 
+    # endif()
+
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
 function(cmakejson_close_project)
     list(APPEND CMAKE_MESSAGE_CONTEXT "close")
+
+
+    
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
