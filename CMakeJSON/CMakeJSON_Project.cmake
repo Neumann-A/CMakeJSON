@@ -242,7 +242,7 @@ function(cmakejson_project_option_setup _optprefix)
 
     if(IS_BOOL_OPTION)
         set(OPT_FUNC option)
-        set(OPT_PARAMS "${${_optprefix}_DESCRIPTION}" ${${_optprefix}_DEFAULT_VALUE})
+        set(OPT_PARAMS ${${_optprefix}_VARIABLE} "${${_optprefix}_DESCRIPTION}" ${${_optprefix}_DEFAULT_VALUE})
         if(DEFINED ${${_optprefix}}_CONDITION)
             if(${${_optprefix}}_CONDITION STREQUAL "")
                 message(${CMakeJSON_MSG_WARNING_TYPE} "Value 'condition' for option '${${_optprefix}_VARIABLE}' is an empty string!")
@@ -754,7 +754,6 @@ function(cmakejson_close_project)
         set_property(GLOBAL APPEND PROPERTY PACKAGES_FOUND ${PACKAGE_NAME})
         cmakejson_get_project_property(PROPERTY DESCRIPTION)
         cmakejson_get_project_property(PROPERTY HOMEPAGE)
-        message("blablub ${DESCRIPTION} ${HOMEPAGE}")
         set_package_properties(${PACKAGE_NAME} PROPERTIES
                        DESCRIPTION "${DESCRIPTION}"
                        URL "${HOMEPAGE}")
