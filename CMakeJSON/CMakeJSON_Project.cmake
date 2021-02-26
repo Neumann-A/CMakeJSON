@@ -211,7 +211,7 @@ function(cmakejson_add_optional_dependency _depprefix _optname)
     if(DEFINED ${_depprefix}_PURPOSE)
         set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
     endif()
-    set_package_properties(${_package} PROPERTIES TYPE OPTIONAL)
+    set_package_properties(${dep_name} PROPERTIES TYPE OPTIONAL)
 endfunction()
 
 function(cmakejson_project_option_setup _optprefix)
@@ -270,9 +270,8 @@ function(cmakejson_project_option_setup _optprefix)
             endif()
         endforeach()
 
-        if(${${_optprefix}_DEPENDENCIES})
-            cmakejson_run_func_over_parsed_range(${_optprefix}_DEPENDENCIES cmakejson_add_optional_dependency ${${_optprefix}_NAME})
-        endif()
+        cmakejson_run_func_over_parsed_range(${_optprefix}_DEPENDENCIES cmakejson_add_optional_dependency ${${_optprefix}_NAME})
+
         # if(${${_optprefix}_VARIABLE} AND DEFINED ${_optprefix}_CODE)
         #     # TODO: Do something?
         # endif()
@@ -381,6 +380,12 @@ function(cmakejson_setup_project)
         endif()
     endforeach()
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
+
+    if(CMakeJSON_PARSE_PROJECT_PUBLIC_CMAKE_MODULE_PATH)
+        file(REAL_PATH "${CMakeJSON_PARSE_PROJECT_PUBLIC_CMAKE_MODULE_PATH}" module_path)
+        list(APPEND CMAKE_MODULE_PATH "${module_path}")
+        unset(module_path)
+    endif()
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "deps")
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_DEPENDENCIES cmakejson_add_dependency)
@@ -504,7 +509,7 @@ function(cmakejson_generate_project_config)
             string(APPEND _config_contents ")\n")
             if(DEPENDENCY_${_dep}_OPTION)
                 string(APPEND _config_contents "endif(@${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE}@)\n  ")
-                unset(OPTION_${DEPENDENCY_${_dep}_OPTION)
+                unset(OPTION_${DEPENDENCY_${_dep}_OPTION})
                 unset(OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
             endif()
             unset(DEPENDENCY_${_dep}_FIND_PACKAGE)
@@ -725,7 +730,7 @@ function(cmakejson_close_project)
     # endif()
 
     # This only exists @ install time
-    message(STATUS "EXPORTED_TARGETS:${EXPORTED_TARGETS}")
+
     if(EXPORTED_TARGETS)
         install(EXPORT ${EXPORT_NAME}
                 NAMESPACE ${EXPORT_NAMESPACE}:: 

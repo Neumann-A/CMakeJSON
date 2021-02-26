@@ -18,7 +18,7 @@
             "dependencies": [ 
                 {
                    "name": "ME",
-                   "purpose" : "just testing"
+                   "purpose" : "purpose: just testing"
                 } 
             ]
         }
@@ -26,6 +26,7 @@
     "dependencies": [
         "SP"
     ],
+    "public_cmake_module_path" : "cmake",
     "list" : [
         "Executable.target.json"
     ]

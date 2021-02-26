@@ -1,3 +1,4 @@
 cmake_minimum_required(VERSION 3.19)
 project(CMakeJSON)
+set(CMAKE_MESSAGE_CONTEXT_SHOW ON)
 add_subdirectory(examples)
