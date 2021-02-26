@@ -16,7 +16,10 @@
             "description" : "needs me",
             "default_value" : "ON",
             "dependencies": [ 
-                "ME"
+                {
+                   "name": "ME",
+                   "purpose" : "just testing"
+                } 
             ]
         }
     ],
