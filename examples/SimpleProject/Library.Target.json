@@ -1,37 +1,42 @@
 {
     "name" : "LibraryTarget" ,
     "target_type" : "library",
-    "additional_target_parameters" : "STATIC",
+    "parameters" : [
+        "STATIC"
+    ],
+    "sources" : [
+        "src/simplelib.cpp"
+    ],
 
     "target_sources" : {
         "private" : [
-            "src/simple_private.hpp",
-            "src/simplelib.cpp"
+            "src/simple_private.hpp"
         ]
     },
 
     "include_directories" : {
         "private" : [ 
-            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>",
-            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         ],
-        "public:" : [ "$<INSTALL_INTERFACE:include>"]
+        "public" : [ 
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>",
+            "$<INSTALL_INTERFACE:include>" ]
     },
 
     "compile_features" : {
-        "private": [
-            "std_cxx17"
+        "private" : [
+            "cxx_std_17"
         ]
     },
 
-    "compile_defintions" : {
-        "public": [
+    "compile_definitions" : {
+        "public" : [
             "PUBLIC_JUST_TESTING"
         ],
-        "interface": [
+        "interface" : [
             "INTERACE_JUST_TESTING"
         ],
-        "private": [
+        "private" : [
             "PRIVATE_JUST_TESTING"
         ]
     }
