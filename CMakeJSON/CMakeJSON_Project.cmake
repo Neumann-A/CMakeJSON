@@ -240,8 +240,7 @@ function(cmakejson_project_option_setup _optprefix)
 
     if(IS_BOOL_OPTION)
         set(OPT_FUNC option)
-        set(OPT_COND)
-        set(OPT_FORCE)
+        set(OPT_PARAMS "${${_optprefix}_DESCRIPTION}" ${${_optprefix}_DEFAULT_VALUE})
         if(DEFINED ${${_optprefix}}_CONDITION)
             if(${${_optprefix}}_CONDITION STREQUAL "")
                 message(${CMakeJSON_MSG_WARNING_TYPE} "Value 'condition' for option '${${_optprefix}_VARIABLE}' is an empty string!")
@@ -250,10 +249,11 @@ function(cmakejson_project_option_setup _optprefix)
                 set(${_optprefix}_DEFAULT_VALUE OFF)
             endif()
             set(OPT_FUNC cmake_dependent_option)
-            set(OPT_COND "${${${_optprefix}}_CONDITION}")
-            set(OPT_FORCE OFF)
+            list(APPEND OPT_PARAMS "${${${_optprefix}}_CONDITION}")
+            list(APPEND OPT_PARAMS OFF)
         endif()
-        cmake_language(CALL ${OPT_FUNC} "${${_optprefix}_VARIABLE}" "${${_optprefix}_DESCRIPTION}" ${${_optprefix}_DEFAULT_VALUE} "${OPT_COND}" ${OPT_FORCE})
+        cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_OPTIONS "${OPT_FUNC}(${OPT_PARAMS})")
+        cmake_language(CALL ${OPT_FUNC} ${OPT_PARAMS})
         
         # Can only add feature info to BOOL options
         if(NOT ${_optprefix}_NO_FEATURE_INFO)
@@ -450,7 +450,7 @@ function(cmakejson_generate_project_config)
             set(_var ${${_opt}_VARIABLE})
             set(_set_var "set")
             set(_var_package)
-            if ${_opt}_TYPE STREQUAL "PATH")
+            if(${_opt}_TYPE STREQUAL "PATH")
                 set(_set_var set_and_check)
                 set(_var_package PACKAGE_)
                 if(${_opt}_EXPORT)
@@ -569,7 +569,7 @@ function(cmakejson_generate_project_config)
             cmakejson_get_project_property(PROPERTY ${_opt}_VARIABLE)
             cmakejson_get_project_property(PROPERTY ${_opt}_EXPORT)
             set(_var ${${_opt}_VARIABLE})
-            if ${_opt}_TYPE STREQUAL "PATH" AND ${_opt}_EXPORT)
+            if(${_opt}_TYPE STREQUAL "PATH" AND ${_opt}_EXPORT)
                 list(APPEND EXPORTED_CONFIG_PATH_VARS \${CMAKE_FIND_PACKAGE_NAME}_${_var})
             elseif(${_opt}_EXPORT)
                 list(APPEND EXPORTED_CONFIG_VARS \${CMAKE_FIND_PACKAGE_NAME}_${_var})
@@ -650,9 +650,101 @@ endfunction()
 
 function(cmakejson_close_project)
     list(APPEND CMAKE_MESSAGE_CONTEXT "close")
+    cmakejson_get_directory_property(PROPERTY CURRENT_PROJECT)
+    if(NOT DEFINED CURRENT_PROJECT OR CURRENT_PROJECT STREQUAL "")
+        message(${CMakeJSON_MSG_ERROR_TYPE} "No CURRENT_PROJECT defined in the current directory scope! Cannot call 'cmakejson_close_project'!")
+    endif()
 
+    cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
+    cmakejson_get_project_property(PROPERTY NAMESPACE)
+    cmakejson_get_project_property(PROPERTY EXPORT_NAME)
+    cmakejson_get_project_property(PROPERTY EXPORTED_TARGETS)
+    cmakejson_get_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION)
+    cmakejson_get_project_property(PROPERTY CHILD_PROJECTS)
 
-    
+    # foreach(_component IN LISTS ${PROJECT_NAME}_COMPONENTS)
+    #     cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_${_component}_NAMESPACE)
+    #     cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_${_component}_EXPORT_NAME)
+    #     cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_${_component}_EXPORTED_TARGETS)
+
+    #     if(${PROJECT_NAME}_EXPORT_ON_BUILD AND ${PROJECT_NAME}_${_component}_EXPORTED_TARGETS)
+    #         export(EXPORT ${${PROJECT_NAME}_${_component}_EXPORT_NAME}
+    #             NAMESPACE ${${PROJECT_NAME}_${_component}_NAMESPACE}::
+    #             FILE ${CMAKE_INSTALL_DATAROOTDIR}/${${PROJECT_NAME}_PACKAGE_NAME}/${${PROJECT_NAME}_PACKAGE_NAME}_${_component}Targets.cmake)
+    #     endif()
+    #     if(${PROJECT_NAME}_EXPORTED_TARGETS)
+    #         install(EXPORT ${${PROJECT_NAME}_${_component}_EXPORT_NAME}
+    #                 NAMESPACE ${${PROJECT_NAME}_${_component}_NAMESPACE}:: 
+    #                 FILE ${${PROJECT_NAME}_PACKAGE_NAME}_${_component}Targets.cmake 
+    #                 DESTINATION "${${PROJECT_NAME}_CONFIG_INSTALL_DESTINATION}")
+    #      endif()
+    #      foreach(_target IN LISTS ${PROJECT_NAME}_EXPORTED_TARGETS)
+    #         get_target_property(IS_EXECUTABLE ${_target} TYPE)
+    #         if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
+    #             add_executable(${${PROJECT_NAME}_${_component}_NAMESPACE}::${_target} ALIAS ${_target})
+    #         else()
+    #             add_library(${${PROJECT_NAME}_${_component}_NAMESPACE}::${_target} ALIAS ${_target})
+    #         endif()
+    #     endforeach()
+    #     # Disable find_package for internally available packages. 
+    #     set(CMAKE_DISABLE_FIND_PACKAGE_${${PROJECT_NAME}_PACKAGE_NAME}_${_component} TRUE CACHE INTERNAL "" FORCE)
+    #     set(${${PROJECT_NAME}_PACKAGE_NAME}_${_component}_FOUND TRUE CACHE INTERNAL "" FORCE)
+    #     set(_CMakeCS_${${PROJECT_NAME}_PACKAGE_NAME}_${_component}_FOUND TRUE)
+    #     cmcs_set_global_property(PROPERTY _CMakeCS_${${PROJECT_NAME}_PACKAGE_NAME}_${_component}_FOUND)
+    #     set_property(GLOBAL APPEND PROPERTY PACKAGES_FOUND ${${PROJECT_NAME}_PACKAGE_NAME}_${_component})
+
+    #     cmcs_set_global_property(PROPERTY ${PROJECT_NAME}_${_component}_LOCKED)
+    # endforeach()
+
+    # In Project find_package calls never work in build and require ALIAS targets
+    # This export dues export the targets into the build dir with absoulte paths.
+    # It only works if the <packagename>Config.cmake has all requirements to run 
+    # correctly in the build dir. This requires that all files required by the config
+    # are present in the build dir. If the config only requires targets, version or
+    # other generated files this works. If it additionally requires files from the 
+    # SOURCE_TREE which are only installed it typically breaks and requires extra
+    # code in the config to work! The only way to use those exported files is to have
+    # a staged build with e.g. ExternalProject_Add followed by another ExternalProject_Add
+    # which depends on the build target of the first and consumes the generated configs
+    # from it. This skips the required install step but leaves the question if it is worth
+    # the effort since extra care must be taken to make it findable with find_package (
+    # e.g. setting <packagename>_DIR correctly) while for **all** installed librarys setting  
+    # CMAKE_PREFIX_PATH would be sufficient
+    # TL;DR: **This is only useful for ExternalProject_Add and skipping the install step and
+    #          requires the config to work form the build dir**
+    # if(${PROJECT_NAME}_EXPORT_ON_BUILD AND ${PROJECT_NAME}_EXPORTED_TARGETS)
+    #     export(EXPORT ${${PROJECT_NAME}_EXPORT_NAME}
+    #         NAMESPACE ${${PROJECT_NAME}_NAMESPACE}:: 
+    #         FILE ${CMAKE_INSTALL_DATAROOTDIR}/${${PROJECT_NAME}_PACKAGE_NAME}/${${PROJECT_NAME}_PACKAGE_NAME}Targets.cmake)
+    # endif()
+
+    # This only exists @ install time
+    if(EXPORTED_TARGETS)
+        install(EXPORT ${EXPORT_NAME}
+                NAMESPACE ${NAMESPACE}:: 
+                FILE ${PACKAGE_NAME}Targets.cmake 
+                DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}")
+                
+    endif()
+
+    # Alias all exported targets into the namespace ${PROJECT_NAME}_PACKAGE_NAME 
+    # just as the target file would do. Assumes that all variables are available just 
+    # like if find_package is called.
+    foreach(_target IN LISTS EXPORTED_TARGETS)
+        get_target_property(IS_EXECUTABLE ${_target} TYPE)
+        if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
+            add_executable(${NAMESPACE}::${_target} ALIAS ${_target})
+        else()
+            add_library(${NAMESPACE}::${_target} ALIAS ${_target})
+        endif()
+    endforeach()
+
+    # Disable find_package for internally available packages. 
+    set(CMAKE_DISABLE_FIND_PACKAGE_${PACKAGE_NAME} TRUE CACHE INTERNAL "" FORCE)
+    set(${PACKAGE_NAME}_FOUND TRUE CACHE INTERNAL "" FORCE)
+    cmakejson_set_directory_property(PROPERTY ${PACKAGE_NAME}_FOUND TRUE)
+    set_property(GLOBAL APPEND PROPERTY PACKAGES_FOUND ${PACKAGE_NAME})
+
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
