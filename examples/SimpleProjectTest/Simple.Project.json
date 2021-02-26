@@ -2,6 +2,7 @@
     "name" : "SimpleProject" ,
     "package_name" : "SP",
     "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "Simple Project to show off CMakeJSON",
     "version" : "1.0.0",
     "languages" : ["C","CXX"],
     "options" : [
