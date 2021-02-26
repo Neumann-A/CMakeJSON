@@ -6,3 +6,5 @@ set(CMakeJSON_ENABLE_PROJECT_OVERRIDE ON) # defines a macro called project() to 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../CMakeJSON/CMakeJSON.cmake")
 
 project("Simple.Project.json")
+
+feature_summary(WHAT ALL) # Purely optional.
