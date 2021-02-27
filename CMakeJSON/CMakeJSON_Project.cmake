@@ -774,6 +774,11 @@ endfunction()
 
 function(cmakejson_project _input _filename)
     list(APPEND CMAKE_MESSAGE_CONTEXT "project")
+    if(CMAKE_FOLDER)
+        set(CMakeJSON_CMAKE_FOLDER_BACKUP ${CMAKE_FOLDER})
+    endif()
+    file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+    set(CMAKE_FOLDER "${rel_path}")
 
     cmakejson_validate_project_json("${_input}")
 
@@ -830,6 +835,11 @@ function(cmakejson_project _input _filename)
     cmakejson_generate_project_config()
     cmakejson_close_project()
 
+    if(CMakeJSON_CMAKE_FOLDER_BACKUP)
+        set(CMAKE_FOLDER "${CMakeJSON_CMAKE_FOLDER_BACKUP}")
+    else()
+        unset(CMAKE_FOLDER)
+    endif()
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 

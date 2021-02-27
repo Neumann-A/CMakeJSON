@@ -47,6 +47,7 @@ function(cmakejson_add_target _input _filename)
 
     set(target_name ${CMakeJSON_PARSE_TARGET_NAME})
     cmake_language(CALL ${target_command} ${target_name} ${target_params} ${target_sources})
+    source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${target_sources})
     cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Add target: ${target_command}(${target_name} ${target_params} ${target_sources})")
 
     set(target_command_list 
@@ -92,6 +93,7 @@ function(cmakejson_add_target _input _filename)
                 cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Target command: ${_command}(${target_name} ${_access} ${_params})")
                 cmake_language(CALL ${_command} ${target_name} ${_access} ${_params})
                 if(_command STREQUAL "target_sources")
+                    source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${_params})
                     list(APPEND ide_sources ${_params})
                 endif()
             endif()

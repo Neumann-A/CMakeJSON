@@ -2,7 +2,8 @@
     "name" : "ExecutableTarget" ,
     "target_type" : "executable",
     "sources" : [
-        "src/simple.cpp"
+        "src/simple.cpp",
+        "include/simple.hpp"
     ],
 
     "link_libraries" : {
