@@ -15,6 +15,10 @@ endfunction()
 function(cmakejson_target_redirection)
 endfunction()
 
+function(cmakejson_set_target_property _prefix _target)
+    set_property(TARGET "${_target}" ${${_prefix}_APPEND_OPTION} PROPERTY ${${_prefix}_NAME} ${${_prefix}_VALUE})
+endfunction()
+
 function(cmakejson_add_target _input _filename)
     list(APPEND CMAKE_MESSAGE_CONTEXT "target")
 
@@ -115,6 +119,9 @@ function(cmakejson_add_target _input _filename)
         unset(_params)
         unset(parse_command)
     endforeach()
+
+    cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_PROPERTIES cmakejson_set_target_property "${target_name}")
+
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
     set(IS_OBJECT_LIBRARY FALSE)
