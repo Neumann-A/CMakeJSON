@@ -1,0 +1,8 @@
+{
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "PWC comp1 component",
+    "languages" : ["CXX"],
+    "list" : [
+        "comp1.target.json"
+    ]
+}

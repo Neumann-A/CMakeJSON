@@ -1,0 +1,25 @@
+{
+    "name" : "comp1" ,
+    "target_type" : "library",
+    "parameters" : [
+        "STATIC"
+    ],
+    "sources" : [
+        "src/comp1.cpp"
+    ],
+    "target_sources" : {
+        "private" : [
+            "include/PWC/comp1/comp1.hpp"
+        ]
+    },
+    "include_directories" : {
+        "private" : [ 
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+        ],
+        "public" : [ 
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>",
+            "$<INSTALL_INTERFACE:include>" ]
+    },
+    "public_include_directory": "${CMAKE_CURRENT_SOURCE_DIR}/include",
+    "link_libraries" : {"private":["core"]}
+}

@@ -39,5 +39,11 @@
         "private" : [
             "PRIVATE_JUST_TESTING"
         ]
-    }
+    },
+    "__public_include_directory": "${CMAKE_CURRENT_SOURCE_DIR}/include",
+    "properties" : [
+        { "name" : "PUBLIC_HEADER",
+          "value" : "${CMAKE_CURRENT_SOURCE_DIR}/include/simple.hpp"
+        }
+    ]
 }

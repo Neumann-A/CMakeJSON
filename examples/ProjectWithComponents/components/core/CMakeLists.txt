@@ -1,0 +1,1 @@
+project("core.json")

@@ -1,0 +1,15 @@
+{
+    "name" : "PWC" ,
+    "target_type" : "executable",
+    "sources" : [
+        "src/big.cpp"
+    ],
+
+    "link_libraries" : {
+        "private": [
+            "core",
+            "comp1",
+            "comp2"
+        ]
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "name" : "ProjectWithComponents" ,
+    "package_name" : "PWC",
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "Project with components to show off CMakeJSON",
+    "version" : "1.0.0",
+    "languages" : ["CXX"],
+    "options" : [
+        { 
+            "name" : "Something",
+            "description" : "build with option something",
+            "default_value" : "ON"
+        }
+    ],
+    "list" : [
+        "components/core",
+        "components/comp1",
+        "components/comp2",
+        "PWC.target.json"
+    ]
+}

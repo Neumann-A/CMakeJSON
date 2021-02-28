@@ -1,0 +1,9 @@
+{
+    "component_name" : "core",
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "PWC core component",
+    "languages" : ["CXX"],
+    "list" : [
+        "core.target.json"
+    ]
+}
