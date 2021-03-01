@@ -1,0 +1,17 @@
+{
+    "name" : "TestWithComponents" ,
+    "package_name" : "TWC",
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "Simple project with dependency to show off CMakeJSON",
+    "version" : "1.0.0",
+    "languages" : ["CXX"],
+    "dependencies": [
+        {
+            "name":"PWC",
+            "components" : [ "core", "comp1", "comp2" ]
+        }
+    ],
+    "list" : [
+        "TWC.target.json"
+    ]
+}

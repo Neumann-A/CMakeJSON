@@ -1,0 +1,14 @@
+{
+    "name" : "TWC" ,
+    "target_type" : "executable",
+    "sources" : [
+        "main.cpp"
+    ],
+
+    "link_libraries" : {
+        "private": [
+            "PWC::comp2",
+            "PWC::comp1"
+        ]
+    }
+}
