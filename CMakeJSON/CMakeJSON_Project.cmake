@@ -4,24 +4,26 @@ function(cmakejson_validate_project_json _jsoninput)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
-function(cmakejson_set_project_parse_defaults_after_project)
+macro(cmakejson_set_project_parse_defaults_after_project)
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INSTALL_DESTINATION)
-        set(CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INSTALL_DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}" PARENT_SCOPE)
+        set(CMakeJSON_PARSE_PROJECT_CMAKE_CONFIG_INSTALL_DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}")
     endif()
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_PKGCONFIG_INSTALL_DESTINATION)
-        set(CMakeJSON_PARSE_PROJECT_PKGCONFIG_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" PARENT_SCOPE)
+        set(CMakeJSON_PARSE_PROJECT_PKGCONFIG_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
     endif()
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY)
         if(CMakeJSON_PARSE_PROJECT_VERSIONED_INSTALLED)
-            set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}-${PROJECT_VERSION_MAJOR}" PARENT_SCOPE)
+            set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}-${PROJECT_VERSION_MAJOR}")
         else()
-            set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}" PARENT_SCOPE)
+            set(CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}")
         endif()
     endif()
+    message(STATUS "CMAKE_INSTALL_INCLUDEDIR:${CMAKE_INSTALL_INCLUDEDIR}")
+    message(STATUS "CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY:${CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY}")
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION)
-        set(CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}" PARENT_SCOPE)
+        set(CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION "${CMakeJSON_PARSE_PROJECT_USAGE_INCLUDE_DIRECTORY}/${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME}")
     endif()
-endfunction()
+endmacro()
 
 function(cmakejson_set_project_parse_defaults _filename)
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_NAME)
@@ -43,10 +45,12 @@ function(cmakejson_set_project_parse_defaults _filename)
         if(NOT DEFINED CMakeJSON_PARSE_PROJECT_PACKAGE_NAME AND NOT DEFINED CMakeJSON_PARSE_PROJECT_COMPONENT_NAME)
             cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
             set(CMakeJSON_PARSE_PROJECT_PACKAGE_NAME "${PACKAGE_NAME}_${CMakeJSON_PARSE_PROJECT_NAME}" PARENT_SCOPE)
+            set(CMakeJSON_PARSE_PROJECT_PACKAGE_NAME "${PACKAGE_NAME}_${CMakeJSON_PARSE_PROJECT_NAME}")
             set(component_include "${CMakeJSON_PARSE_PROJECT_NAME}")
         elseif(DEFINED CMakeJSON_PARSE_PROJECT_COMPONENT_NAME)
             cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
             set(CMakeJSON_PARSE_PROJECT_PACKAGE_NAME "${PACKAGE_NAME}_${CMakeJSON_PARSE_PROJECT_COMPONENT_NAME}" PARENT_SCOPE)
+            set(CMakeJSON_PARSE_PROJECT_PACKAGE_NAME "${PACKAGE_NAME}_${CMakeJSON_PARSE_PROJECT_COMPONENT_NAME}")
             set(component_include "${CMakeJSON_PARSE_PROJECT_COMPONENT_NAME}")
         endif()
         if(NOT DEFINED CMakeJSON_PARSE_PROJECT_EXPORT_NAMESPACE AND NOT DEFINED CMakeJSON_PARSE_PROJECT_EXPORT_COMPONENT_NAME)
@@ -81,6 +85,7 @@ function(cmakejson_set_project_parse_defaults _filename)
         endif()
         if(NOT DEFINED CMakeJSON_PARSE_PROJECT_PACKAGE_NAME)
             set(CMakeJSON_PARSE_PROJECT_PACKAGE_NAME ${CMakeJSON_PARSE_PROJECT_NAME} PARENT_SCOPE)
+            set(CMakeJSON_PARSE_PROJECT_PACKAGE_NAME ${CMakeJSON_PARSE_PROJECT_NAME})
         endif()
         if(NOT DEFINED CMakeJSON_PARSE_PROJECT_EXPORT_NAME)
             set(CMakeJSON_PARSE_PROJECT_EXPORT_NAME ${CMakeJSON_PARSE_PROJECT_PACKAGE_NAME} PARENT_SCOPE)
@@ -197,7 +202,7 @@ function(cmakejson_add_optional_dependency _depprefix _optname)
         else()
             # CMAKE_DISABLE_FIND_PACKAGE_<package> does deactivate find_package completly 
             # which also means that feature_summary will not pick it up
-            # So NO_DEFAULT_PATH is used here so that the package is not found.
+            # So NO_DEFAULT_PATH is used here so that a package is not found.
             set(disable_package NO_DEFAULT_PATH)
         endif()
     endif()
@@ -377,7 +382,8 @@ function(cmakejson_setup_project)
                            PKGCONFIG_INSTALL_DESTINATION
                            USAGE_INCLUDE_DIRECTORY
                            PUBLIC_HEADER_INSTALL_DESTINATION
-                           PUBLIC_CMAKE_MODULE_PATH)
+                           PUBLIC_CMAKE_MODULE_PATH
+                           CONFIG_MODULES)
     foreach(_prop IN LISTS project_properties)
         if(DEFINED CMakeJSON_PARSE_PROJECT_${_prop})
             cmakejson_set_project_property(PROPERTY ${_prop}  "${CMakeJSON_PARSE_PROJECT_${_prop}}")
@@ -432,32 +438,20 @@ function(cmakejson_generate_project_config)
         string(APPEND _config_contents "@PACKAGE_INIT@\n")
         string(APPEND _config_contents "cmake_policy (PUSH)\n")
         string(APPEND _config_contents "cmake_minimum_required (VERSION 3.19)\n\n")
+        # string(APPEND _config_contents "include(FindPackageHandleStandardArgs)\n\n")
         list(APPEND ${PROJECT_NAME}_CONFIG_VARS CMAKE_CURRENT_LIST_FILE)
         if(PUBLIC_CMAKE_MODULE_PATH)
             list(APPEND ${PROJECT_NAME}_CONFIG_VARS \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH)
-            string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}/cmake\")\n")        
+            string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}/cmake\")\n")
             string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH_BACKUP \${CMAKE_MODULE_PATH})\n")
             string(APPEND _config_contents "list(PREPEND CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}/cmake\")\n") # Prepending makes sure we get the correct modules
-            # string(APPEND _config_contents "if(0)\n") #@${PROJECT_NAME}_BUILD_DIR_CONFIG@
-            # foreach(_dir IN LISTS PUBLIC_CMAKE_MODULE_PATH)
-            #     if(IS_ABSOLUTE "${_dir}")
-            #         string(APPEND _config_contents "    list(PREPEND CMAKE_MODULE_PATH \"${_dir}\")\n")
-            #         string(APPEND _config_contents "    list(APPEND \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"${_dir}\")\n")
-            #     else()
-            #         string(APPEND _config_contents "    list(PREPEND CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/${_dir}\")\n")
-            #         string(APPEND _config_contents "    list(PREPEND CMAKE_MODULE_PATH \"${CMAKE_CURRENT_BINARY_DIR}/${_dir}\")\n")
-            #         string(APPEND _config_contents "    list(APPEND \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/${_dir}\")\n")
-            #         string(APPEND _config_contents "    list(APPEND \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"${CMAKE_CURRENT_BINARY_DIR}/${_dir}\")\n")
-            #     endif()
-            # endforeach()
-            # string(APPEND _config_contents "endif()\n")
             string(APPEND _config_contents "list(REMOVE_DUPLICATES CMAKE_MODULE_PATH)\n")
             string(APPEND _config_contents "list(REMOVE_DUPLICATES \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH)\n")
             string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH \"\${\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH}\" CACHE INTERNAL \"\")\n\n")   
         endif()
 
-        string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_BUILD_AS_SHARED @BUILD_SHARED_LIBS@ CACHE INTERNAL \"\")\n")     
-        #string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_BUILD_DIR_CONFIG 0) # Is config within build dir?\n")
+        string(APPEND _config_contents "set(\${CMAKE_FIND_PACKAGE_NAME}_BUILD_AS_SHARED @BUILD_SHARED_LIBS@ CACHE INTERNAL \"\")\n")
+
         foreach(_opt IN LISTS OPTIONS)
             cmakejson_get_project_property(PROPERTY OPTION_${_opt}_TYPE)
             cmakejson_get_project_property(PROPERTY OPTION_${_opt}_VARIABLE)
@@ -486,38 +480,40 @@ function(cmakejson_generate_project_config)
             unset(OPTION_${_opt}_TYPE)
         endforeach()
 
-        # string(APPEND _config_contents "\n # Deal with modules to include\n")
-        # foreach(_module IN LISTS ${PROJECT_NAME}_MODULES_TO_INCLUDE)
-        #     string(APPEND _config_contents "option(\${CMAKE_FIND_PACKAGE_NAME}_WITHOUT_CMAKE_MODULE_${_module} \"Deactivate inclusion of module ${_module} for \${CMAKE_FIND_PACKAGE_NAME} \" OFF)\n")
-        #     string(APPEND _config_contents "if(NOT \${CMAKE_FIND_PACKAGE_NAME}_WITHOUT_CMAKE_MODULE_${_module})\n")
-        #     string(APPEND _config_contents "    include(${_module})\n")
-        #     string(APPEND _config_contents "endif()\n")
-        # endforeach()
+        cmakejson_get_project_property(PROPERTY CONFIG_MODULES)
+        if(CONFIG_MODULES)
+            string(APPEND _config_contents "\n # Deal with modules to include\n")
+            foreach(_module IN LISTS CONFIG_MODULES)
+                string(APPEND _config_contents "include(${_module})\n")
+            endforeach()
+        endif()
 
         # Deal with dependencies
         cmakejson_get_project_property(PROPERTY DEPENDENCIES)
-        string(APPEND _config_contents "\n # Deal with dependencies \n")
-        string(APPEND _config_contents "include(CMakeFindDependencyMacro)\n")
-        string(APPEND _config_contents "\n # Dependencies \n")
-        # Write find_dependency calls fo required packages
-        foreach(_dep IN LISTS DEPENDENCIES)
-            cmakejson_get_project_property(PROPERTY DEPENDENCY_${_dep}_FIND_PACKAGE)
-            cmakejson_get_project_property(PROPERTY DEPENDENCY_${_dep}_OPTION)
-            if(DEPENDENCY_${_dep}_OPTION)
-                cmakejson_get_project_property(PROPERTY OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
-                string(APPEND _config_contents "if(@${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE}@)\n  ")
-            endif()
-            list(REMOVE_ITEM DEPENDENCY_${_dep}_FIND_PACKAGE REQUIRED)
-            string(APPEND _config_contents "find_dependency(")
-            string(APPEND _config_contents "${DEPENDENCY_${_dep}_FIND_PACKAGE}")
-            string(APPEND _config_contents ")\n")
-            if(DEPENDENCY_${_dep}_OPTION)
-                string(APPEND _config_contents "endif(@${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE}@)\n  ")
-                unset(OPTION_${DEPENDENCY_${_dep}_OPTION})
-                unset(OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
-            endif()
-            unset(DEPENDENCY_${_dep}_FIND_PACKAGE)
-        endforeach()
+        if(DEPENDENCIES)
+            string(APPEND _config_contents "\n # Deal with dependencies \n")
+            string(APPEND _config_contents "include(CMakeFindDependencyMacro)\n")
+            string(APPEND _config_contents "\n # Dependencies \n")
+            # Write find_dependency calls fo required packages
+            foreach(_dep IN LISTS DEPENDENCIES)
+                cmakejson_get_project_property(PROPERTY DEPENDENCY_${_dep}_FIND_PACKAGE)
+                cmakejson_get_project_property(PROPERTY DEPENDENCY_${_dep}_OPTION)
+                if(DEPENDENCY_${_dep}_OPTION)
+                    cmakejson_get_project_property(PROPERTY OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
+                    string(APPEND _config_contents "if(\${CMAKE_FIND_PACKAGE_NAME}_${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE})\n")
+                endif()
+                list(REMOVE_ITEM DEPENDENCY_${_dep}_FIND_PACKAGE REQUIRED)
+                string(APPEND _config_contents "    find_dependency(")
+                string(APPEND _config_contents "${DEPENDENCY_${_dep}_FIND_PACKAGE}")
+                string(APPEND _config_contents ")\n")
+                if(DEPENDENCY_${_dep}_OPTION)
+                    string(APPEND _config_contents "endif(\${CMAKE_FIND_PACKAGE_NAME}_${OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE})\n")
+                    unset(OPTION_${DEPENDENCY_${_dep}_OPTION})
+                    unset(OPTION_${DEPENDENCY_${_dep}_OPTION}_VARIABLE)
+                endif()
+                unset(DEPENDENCY_${_dep}_FIND_PACKAGE)
+            endforeach()
+        endif()
 
         # Deal with components
         cmakejson_get_project_property(PROPERTY CHILD_PROJECTS)
@@ -547,24 +543,10 @@ function(cmakejson_generate_project_config)
             string(APPEND _config_contents "include(\${CMAKE_CURRENT_LIST_DIR}/${PACKAGE_NAME}Targets.cmake)\n")
         endif()
 
-        # if(${_VAR_PREFIX}_SETUP_MODULE_PATH)
-        #     string(APPEND _config_contents "set(CMAKE_MODULE_PATH \${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH_BACKUP)\n") # Restoring old module path
-        # endif()
-        # if(${PROJECT_NAME}_PUBLIC_MODULE_DIRECTORIES)
-        #     set(CMAKE_PUBLIC_MODULES)
-        #     foreach(_module_path IN LISTS ${PROJECT_NAME}_PUBLIC_MODULE_DIRECTORIES)
-        #         list(APPEND CMAKE_PUBLIC_MODULES "\${CMAKE_CURRENT_LIST_DIR}/${_module_path}")
-        #     endforeach()
-        #     string(APPEND _config_contents "set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH} ${CMAKE_PUBLIC_MODULES})\n")
-        # endif()
-
-        string(APPEND _config_contents "find_package_handle_standard_args(\${CMAKE_FIND_PACKAGE_NAME} HANDLE_COMPONENTS HANDLE_VERSION_RANGE\n")
-        if(EXPORTED_CONFIG_VARS)
-            string(APPEND _config_contents "                                  REQUIRED_VARS @${EXPORTED_CONFIG_VARS}@\n")
+        if(PUBLIC_CMAKE_MODULE_PATH)
+            string(APPEND _config_contents "set(CMAKE_MODULE_PATH \${\${CMAKE_FIND_PACKAGE_NAME}_CMAKE_MODULE_PATH_BACKUP})\n") # Restoring old module path
         endif()
-        string(APPEND _config_contents "                                  )\n")
         string(APPEND _config_contents "cmake_policy (POP)\n")
-        #string(APPEND _config_contents "unset(_\${CMAKE_FIND_PACKAGE_NAME}_SEARCHING)\n")
 
         if(CMakeJSON_PARSE_PROJECT_DESCRIPTION)
             string(APPEND _config_contents "set_package_properties(\${CMAKE_FIND_PACKAGE_NAME} PROPERTIES\n"
@@ -615,24 +597,7 @@ function(cmakejson_generate_project_config)
             ${COMPONENT_OPTION}
             ${NO_SET_CHECK}
             )
-    # cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_EXPORT_ON_BUILD)
-    # # Config in build dir!
-    # if(${PROJECT_NAME}_EXPORT_ON_BUILD)
-    #     set(${PROJECT_NAME}_RELATIVE_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-    #     set(${PROJECT_NAME}_BUILD_DIR_CONFIG TRUE)
-    #     configure_package_config_file(
-    #             "${${_VAR_PREFIX}_INPUT_FILE}"
-    #             "${${_VAR_PREFIX}_INSTALL_DESTINATION}/${${PROJECT_NAME}_PACKAGE_NAME}Config.cmake"
-    #             INSTALL_DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}"
-    #             #INSTALL_DESTINATION "$<BUILD_INTERFACE:${REL_CONFIG_PATH}/${${_VAR_PREFIX}_INSTALL_DESTINATION}>"
-    #             PATH_VARS ${${_VAR_PREFIX}_PATH_VARS} ${PROJECT_NAME}_RELATIVE_SOURCE_PATH 
-    #             ${${_VAR_PREFIX}_NO_COMPONENTS}
-    #             ${${_VAR_PREFIX}_NO_SET_CHECK}
-    #             INSTALL_PREFIX "${CMAKE_SOURCE_DIR}"
-    #             )
-    # endif()  
-    # Write ConfigVersion
-    #cmcs_variable_exists_or_error(PREFIX "${_VAR_PREFIX}" VARIABLE_NAMES "")
+    install(DIRECTORY "${PUBLIC_CMAKE_MODULE_PATH" DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}/cmake" )
 
     cmakejson_get_project_property(PROPERTY VERSION)
     cmakejson_get_project_property(PROPERTY VERSION_COMPATIBILITY)
@@ -712,12 +677,12 @@ function(cmakejson_close_project)
     # endforeach()
 
     # In Project find_package calls never work in build and require ALIAS targets
-    # This export dues export the targets into the build dir with absoulte paths.
+    # This export does export the targets into the build dir with absoulte paths.
     # It only works if the <packagename>Config.cmake has all requirements to run 
     # correctly in the build dir. This requires that all files required by the config
     # are present in the build dir. If the config only requires targets, version or
     # other generated files this works. If it additionally requires files from the 
-    # SOURCE_TREE which are only installed it typically breaks and requires extra
+    # SOURCE_TREE which are only installed, it typically breaks and requires extra
     # code in the config to work! The only way to use those exported files is to have
     # a staged build with e.g. ExternalProject_Add followed by another ExternalProject_Add
     # which depends on the build target of the first and consumes the generated configs
@@ -740,7 +705,6 @@ function(cmakejson_close_project)
                 NAMESPACE ${EXPORT_NAMESPACE}:: 
                 FILE ${PACKAGE_NAME}Targets.cmake 
                 DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}")
-                
     endif()
 
     # Alias all exported targets into the namespace ${PROJECT_NAME}_PACKAGE_NAME 
