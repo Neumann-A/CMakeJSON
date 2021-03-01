@@ -70,3 +70,10 @@ foreach(_file IN LISTS cmakejson_cmake_files)
     include("${CMAKE_CURRENT_LIST_DIR}/CMakeJSON_${_file}.cmake")
 endforeach()
 unset(cmakejson_cmake_files)
+
+cmakejson_define_directory_property(INHERITED PROPERTY CURRENT_PROJECT 
+                                    BRIEF_DOCS "Defines the current CMakeJSON project" 
+                                    FULL_DOCS "Defines the current CMakeJSON project")
+cmakejson_define_directory_property(INHERITED PROPERTY CURRENT_PROJECT_DIRECTORY 
+                                    BRIEF_DOCS "Holds the directory the current project has been defined in!" 
+                                    FULL_DOCS "Holds the directory the current project has been defined in!")

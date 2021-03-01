@@ -128,7 +128,7 @@ function(cmakejson_set_project_property)
 endfunction()
 
 function(cmakejson_get_project_property)
-list(APPEND CMAKE_MESSAGE_CONTEXT "get_project_property")
+    list(APPEND CMAKE_MESSAGE_CONTEXT "get_project_property")
     cmakejson_get_directory_property(PROPERTY CURRENT_PROJECT)
     cmakejson_get_directory_property(PROPERTY ${CURRENT_PROJECT}_DIRECTORY)
     set(CURRENT_PROJECT_DIRECTORY ${${CURRENT_PROJECT}_DIRECTORY})
@@ -143,4 +143,13 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "get_project_property")
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
+function(cmakejson_get_current_project _out_name)
+    cmakejson_get_directory_property(PROPERTY CURRENT_PROJECT)
+    set(${_out_name} "${CURRENT_PROJECT}")
+endfunction()
+
+function(cmakejson_set_current_project _name)
+    cmakejson_define_directory_property(INHERITED CURRENT_PROJECT "Defines the current CMakeJSON project")
+    cmakejson_set_directory_property(PROPERTY CURRENT_PROJECT "${_name}")
+endfunction()
 ### 
