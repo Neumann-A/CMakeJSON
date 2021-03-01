@@ -304,7 +304,7 @@ function(cmakejson_project_options)
     list(APPEND CMAKE_MESSAGE_CONTEXT "options")
     cmakejson_print_variables_if(CMakeJSON_DEBUG_PROJECT_OPTIONS CMakeJSON_PARSE_PROJECT_OPTIONS_LENGTH)
     if(NOT DEFINED CMakeJSON_PARSE_PROJECT_OPTIONS_LENGTH OR CMakeJSON_PARSE_PROJECT_OPTIONS_LENGTH LESS_EQUAL 0)
-        cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_OPTIONS VERBOSE "No project options found!")
+        cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_OPTIONS "No project options found!")
         return()
     endif()
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_OPTIONS cmakejson_project_option_setup)
@@ -776,13 +776,15 @@ function(cmakejson_close_project)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
-function(cmakejson_project _input _filename)
+macro(cmakejson_project _input _filename)
+    # IMPORTANT: This needs to be a macro! Otherwise CMake will have an access violation on configure without a prior project() call
     list(APPEND CMAKE_MESSAGE_CONTEXT "project")
     if(CMAKE_FOLDER)
         set(CMakeJSON_CMAKE_FOLDER_BACKUP ${CMAKE_FOLDER})
     endif()
     file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     set(CMAKE_FOLDER "${rel_path}")
+    unset(rel_path)
 
     cmakejson_validate_project_json("${_input}")
 
@@ -806,40 +808,36 @@ function(cmakejson_project _input _filename)
 
     cmakejson_set_project_parse_defaults("${_filename}") # Setup some defaults if nothing has been passed
 
-    if(CMakeJSON_USE_PROJECT_OVERRIDE) # Assume manual setup otherwise. 
-        set(patch)
-        if(DEFINED)
-            set(patch ".${CMakeJSON_PARSE_PROJECT_VERSION_PATCH}")
-        endif()
-        set(tweak)
-        if(DEFINED)
-            set(tweak ".${CMakeJSON_PARSE_PROJECT_VERSION_TWEAK}")
-        endif()
-        cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_LANGUAGES cmakejson_gather_json_array_as_list languages)
-        _project("${CMakeJSON_PARSE_PROJECT_NAME}"
-                    VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}${patch}${tweak}"
-                    DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}"
-                    HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}"
-                    LANGUAGES ${languages}
-                )
-    else()
-        if(NOT DEFINED PROJECT_NAME)
-            message(FATAL_ERROR "CMakeJSON_USE_PROJECT_OVERRIDE is false and PROJECT_NAME is not defined!\nEither manually call project() or set CMakeJSON_USE_PROJECT_OVERRIDE to true!")
-        endif()
+    set(patch)
+    if(DEFINED)
+        set(patch ".${CMakeJSON_PARSE_PROJECT_VERSION_PATCH}")
     endif()
+    set(tweak)
+    if(DEFINED)
+        set(tweak ".${CMakeJSON_PARSE_PROJECT_VERSION_TWEAK}")
+    endif()
+    cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_LANGUAGES cmakejson_gather_json_array_as_list languages)
+
+    if(CMakeJSON_USE_PROJECT_OVERRIDE) # Assume manual setup otherwise. 
+        set(project_func _project)
+    else()
+        set(project_func project)
+    endif()
+    cmake_language(CALL ${project_func} "${CMakeJSON_PARSE_PROJECT_NAME}"
+                                        VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}${patch}${tweak}"
+                                        DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}"
+                                        HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}"
+                                        LANGUAGES ${languages})
+    unset(project_func)
+    unset(patch)
+    unset(tweak)
+
     if(NOT languages STREQUAL "NONE")
         include(GNUInstallDirs)
         cmakejson_set_project_parse_defaults_after_project()
     endif()
+    unset(languages)
     cmakejson_setup_project()
-
-    #if(DEFINED "${CMakeJSON_PARSE_PROJECT_CUSTOM_STEPS}")
-    #    if(${CMakeJSON_PARSE_PROJECT_CUSTOM_STEPS})
-    #        cmakejson_message_if(CMakeJSON_DEBUG_PROJECT VERBOSE "Found field 'custom_steps' in project! Don't forget to call cmakejson_close_project() if finished!")
-    #        list(POP_BACK CMAKE_MESSAGE_CONTEXT)
-    #        return()
-    #    endif()
-    #endif()
     cmakejson_generate_project_config()
     cmakejson_close_project()
 
@@ -849,25 +847,27 @@ function(cmakejson_project _input _filename)
         unset(CMAKE_FOLDER)
     endif()
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
-endfunction()
+    foreach(_var IN LISTS PROJECT_PARSED_VARIABLES)
+        unset(${_var}) # unset all the variables!
+    endforeach()
+endmacro()
 
 # Simply load a file and pass contents further to cmakejson_project
-function(cmakejson_project_file _file)
+macro(cmakejson_project_file _file)
+    # IMPORTANT: This needs to be a macro! Otherwise CMake will have an access violation on configure without a prior project() call
     #TODO: Decide wether to check for *.json extension or special project filename
     file(TO_CMAKE_PATH "${_file}" _file)
-    if(IS_ABSOLUTE "${_file}")
-        set(file "${_file}")
-    else()
-        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
-            set(file "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
-        else()
-            message(FATAL_ERROR "File '${_file}' does not exists!\nNeither is it absolute nor does it exists in the directory '${CMAKE_CURRENT_SOURCE_DIR}'!")
-        endif()
+    get_filename_component(file "${_file}" ABSOLUTE)
+    if(NOT EXISTS "${file}")
+        message(FATAL_ERROR "File '${_file}' does not exists!")
     endif()
     get_filename_component(_filename "${_file}" NAME_WE)
     file(READ "${_file}" _contents)
     cmakejson_project("${_contents}" "${_filename}")
-endfunction()
+    unset(_contents)
+    unset(_filename)
+    unset(file)
+endmacro()
 
 ### project() override
 if(CMakeJSON_ENABLE_PROJECT_OVERRIDE)
