@@ -20,6 +20,6 @@
             "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>",
             "$<INSTALL_INTERFACE:include>" ]
     },
-    "public_include_directory": "${CMAKE_CURRENT_SOURCE_DIR}/include",
+    "public_include_directory": "include/",
     "link_libraries" : {"private":["core"]}
 }

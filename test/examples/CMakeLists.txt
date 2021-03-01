@@ -5,18 +5,19 @@ set(CMAKE_DISABLE_SOURCE_CHANGES OFF CACHE INTERNAL "Disable changes to sources"
 
 ExternalProject_Add(SimpleProject_test  SOURCE_DIR "${CMAKE_SOURCE_DIR}/examples/SimpleProject"
                                         PREFIX "${CMAKE_BINARY_DIR}/install_test"
-                                        STEP_TARGETS build install
+                                        CMAKE_CACHE_ARGS   "-DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/install_test"
+                                                           "-DCMAKE_PREFIX_PATH:STRING=${CMAKE_BINARY_DIR}/install_test"
+                                        STEP_TARGETS install
                                         BUILD_ALWAYS TRUE
                                         )
 
 ExternalProject_Add(SimpleProjectWithDep_test   SOURCE_DIR "${CMAKE_SOURCE_DIR}/examples/SimpleProjectWithDep"
                                                 PREFIX "${CMAKE_BINARY_DIR}/install_test"
                                                 DEPENDS SimpleProject_test-install # not really just to chain the projects
-                                                #CMAKE_GENERATOR "Ninja"
                                                 CMAKE_CACHE_ARGS   "-DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/install_test"
                                                                    "-DCMAKE_PREFIX_PATH:STRING=${CMAKE_BINARY_DIR}/install_test"
                                                 STEP_TARGETS install
-                                                BUILD_ALWAYS )
+                                                BUILD_ALWAYS TRUE)
 
 ExternalProject_Add(ProjectWithComponents_test  SOURCE_DIR "${CMAKE_SOURCE_DIR}/examples/ProjectWithComponents"
                                                 PREFIX "${CMAKE_BINARY_DIR}/install_test"
@@ -24,12 +25,12 @@ ExternalProject_Add(ProjectWithComponents_test  SOURCE_DIR "${CMAKE_SOURCE_DIR}/
                                                 CMAKE_CACHE_ARGS    "-DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/install_test"
                                                                     "-DCMAKE_PREFIX_PATH:STRING=${CMAKE_BINARY_DIR}/install_test"
                                                 STEP_TARGETS install
-                                                BUILD_ALWAYS )
+                                                BUILD_ALWAYS TRUE)
 
-ExternalProject_Add(TestWithComponents_test     SOURCE_DIR "${CMAKE_SOURCE_DIR}/examples/ProjectWithComponents"
+ExternalProject_Add(TestWithComponents_test     SOURCE_DIR "${CMAKE_SOURCE_DIR}/examples/TestWithComponents"
                                                 PREFIX "${CMAKE_BINARY_DIR}/install_test"
                                                 DEPENDS ProjectWithComponents_test-install
                                                 CMAKE_CACHE_ARGS    "-DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/install_test"
                                                                     "-DCMAKE_PREFIX_PATH:STRING=${CMAKE_BINARY_DIR}/install_test"
                                                 STEP_TARGETS install
-                                                BUILD_ALWAYS )
+                                                BUILD_ALWAYS TRUE)
