@@ -106,7 +106,7 @@ function(cmakejson_add_target _input _filename)
         unset(parse_command)
     endforeach()
 
-    foreach(_command add_dependencies) # extra case for target_sources and add_dependencies
+    foreach(_command add_dependencies) # extra case for add_dependencies
         string(TOUPPER "${_command}" parse_command)
         set(_params)
         cmakejson_message_if(CMakeJSON_DEBUG_TARGET_VERBOSE "Checking: CMakeJSON_PARSE_TARGET_${parse_command}_${_access}")
@@ -158,10 +158,13 @@ function(cmakejson_add_target _input _filename)
         # TODO: Make this better customizable from the json instead of overwriting everything. 
         install(TARGETS ${target_name}
                 ${export_options}
-                RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
-                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-                PUBLIC_HEADER DESTINATION ${PUBLIC_HEADER_INSTALL_DESTINATION} COMPONENT Development)
+                RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime
+                LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
+                ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
+                FRAMEWORK DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
+                PUBLIC_HEADER DESTINATION "${PUBLIC_HEADER_INSTALL_DESTINATION}" COMPONENT Development
+                PRIVATE_HEADER DESTINATION "${PUBLIC_HEADER_INSTALL_DESTINATION}/private" COMPONENT Development
+        )
     else()
         cmake_language(EVAL CODE "set(_params ${CMakeJSON_PARSE_TARGET_INSTALL_PARAMETERS})") # Evaluate variables stored in parsed variables.
         install(TARGETS ${target_name}
