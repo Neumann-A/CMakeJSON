@@ -4,4 +4,5 @@ if(CMakeJSON_EXAMPLES)
     add_subdirectory(SimpleProject)
     add_subdirectory(SimpleProjectWithDep) #TODO
     add_subdirectory(ProjectWithComponents)
+    add_subdirectory(TestWithComponents)
 endif()

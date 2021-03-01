@@ -11,13 +11,14 @@ include(CMakeJSON)
 # include("${CMakeJSON_BASE_PATH}/CMakeJSON.cmake") # This does not require setting CMAKE_MODULE_PATH
 
 ### For debugging of CMakeJSON
+set(CMakeJSON_DEBUG OFF) # TODO: Remove this line later and turn off debugging by default!
 set(CMakeJSON_DEBUG_PARSE OFF)
 set(CMakeJSON_DEBUG_RANGE_LOOP OFF)
 set(CMakeJSON_DEBUG_HELPERS OFF)
 set(CMakeJSON_DEBUG_RETURN_PARENT OFF)
 set(CMakeJSON_DEBUG_PROJECT OFF)
-set(CMakeJSON_DEBUG_PROJECT_OPTIONS ON)
-set(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES ON)
+set(CMakeJSON_DEBUG_PROJECT_OPTIONS OFF)
+set(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES OFF)
 set(CMakeJSON_DEBUG_TARGET OFF)
 ###
 
