@@ -18,6 +18,8 @@ List of json members allowed for:
 Other questions might be answered in the [FAQ](docs/faq.md) 
 [Parsing logic](docs/parsing.md)
 
+Note: Currently no validation is done on the passed in `*.json` files. So make sure your field/members names are correctly spelled and have the correct type.
+
 ---
 ## Quickstart
 
