@@ -105,7 +105,7 @@ function(cmakejson_setup_project_common_dependency_properties _depprefix _out_de
     else()
         message(${CMakeJSON_MSG_ERROR_TYPE} "Dependency parsed as '${_depprefix}' is missing a name!")
     endif()
-    set(dep_infos PKG_CONFIG_NAME DESCRIPTION PURPOSE COMPONENTS VERSION FIND_OPTIONS)
+    set(dep_infos PKG_CONFIG_NAME DESCRIPTION PURPOSE COMPONENTS VERSION FIND_OPTIONS CONDITION)
     foreach(dep_info IN LISTS dep_infos)
         if(DEFINED ${_depprefix}_${dep_info})
             cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_${dep_info} "${${_depprefix}_${dep_info}}")
@@ -124,19 +124,30 @@ function(cmakejson_generate_find_package_string _depprefix _out_string)
     else()
         message(${CMakeJSON_MSG_ERROR_TYPE} "Dependency parsed as '${_depprefix}' is missing a name!")
     endif()
-    set(dep_infos PKG_CONFIG_NAME DESCRIPTION PURPOSE COMPONENTS VERSION FIND_OPTIONS)
+    set(dep_infos PKG_CONFIG_NAME DESCRIPTION PURPOSE COMPONENTS VERSION FIND_OPTIONS CONDITION)
     foreach(dep_info IN LISTS dep_infos)
         if(DEFINED ${_depprefix}_${dep_info})
             cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_${dep_info} "${${_depprefix}_${dep_info}}")
         endif()
     endforeach()
-    cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY DEPENDENCIES "${dep_name}")
+    if(DEFINED ${_depprefix}_CONDITION)
+        if(${${_depprefix}_CONDITION})
+            cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY DEPENDENCIES "${dep_name}")
+        endif()
+    else()
+        cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY DEPENDENCIES "${dep_name}")
+    endif()
 
     set(${_out_depname} "${dep_name}" PARENT_SCOPE)
 endfunction()
 
 function(cmakejson_add_dependency _depprefix)
     cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
+    if(DEFINED ${_depprefix}_CONDITION)
+        if(NOT ${${_depprefix}_CONDITION})
+            return()
+        endif()
+    endif()
     cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY REQUIRED_DEPENDENCIES "${dep_name}") # Just in case
     cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "Adding required dependency: ${dep_name}!")
     cmakejson_get_directory_property(PROPERTY ${dep_name}_FOUND)
@@ -176,6 +187,11 @@ endfunction()
 
 function(cmakejson_add_optional_dependency _depprefix _optname)
     cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
+    if(DEFINED ${_depprefix}_CONDITION)
+        if(NOT ${${_depprefix}_CONDITION})
+            return()
+        endif()
+    endif()
     cmakejson_set_project_property(APPEND_OPTION APPEND PROPERTY OPTIONAL_DEPENDENCIES "${dep_name}") # Just in case
     cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_OPTION "${_optname}")
     cmakejson_get_project_property(PROPERTY OPTION_${_optname}_VARIABLE)
@@ -373,7 +389,7 @@ function(cmakejson_setup_project)
     if(NOT CURRENT_PROJECT STREQUAL "${CMakeJSON_PARSE_PROJECT_NAME}")
         message(FATAL_ERROR "'${CURRENT_PROJECT}' does not match '${CMakeJSON_PARSE_PROJECT_NAME}'")
     endif()
-    cmakejson_set_directory_property(PROPERTY "${CMakeJSON_PARSE_PROJECT_NAME}_DIRECTORY" "${PROJECT_SOURCE_DIR}")
+    cmakejson_set_directory_property(PROPERTY "${CMakeJSON_PARSE_PROJECT_NAME}_DIRECTORY" "${CMAKE_CURRENT_SOURCE_DIR}")
     if(PARENT_PROJECT)
         cmakejson_set_project_property(PROPERTY PARENT_PROJECT "${PARENT_PROJECT}")
     endif()
@@ -645,40 +661,6 @@ function(cmakejson_close_project)
     cmakejson_get_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION)
     cmakejson_get_project_property(PROPERTY CHILD_PROJECTS)
 
-    # foreach(_component IN LISTS ${PROJECT_NAME}_COMPONENTS)
-    #     cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_${_component}_NAMESPACE)
-    #     cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_${_component}_EXPORT_NAME)
-    #     cmcs_get_global_property(PROPERTY ${PROJECT_NAME}_${_component}_EXPORTED_TARGETS)
-
-    #     if(${PROJECT_NAME}_EXPORT_ON_BUILD AND ${PROJECT_NAME}_${_component}_EXPORTED_TARGETS)
-    #         export(EXPORT ${${PROJECT_NAME}_${_component}_EXPORT_NAME}
-    #             NAMESPACE ${${PROJECT_NAME}_${_component}_NAMESPACE}::
-    #             FILE ${CMAKE_INSTALL_DATAROOTDIR}/${${PROJECT_NAME}_PACKAGE_NAME}/${${PROJECT_NAME}_PACKAGE_NAME}_${_component}Targets.cmake)
-    #     endif()
-    #     if(${PROJECT_NAME}_EXPORTED_TARGETS)
-    #         install(EXPORT ${${PROJECT_NAME}_${_component}_EXPORT_NAME}
-    #                 NAMESPACE ${${PROJECT_NAME}_${_component}_NAMESPACE}:: 
-    #                 FILE ${${PROJECT_NAME}_PACKAGE_NAME}_${_component}Targets.cmake 
-    #                 DESTINATION "${${PROJECT_NAME}_CONFIG_INSTALL_DESTINATION}")
-    #      endif()
-    #      foreach(_target IN LISTS ${PROJECT_NAME}_EXPORTED_TARGETS)
-    #         get_target_property(IS_EXECUTABLE ${_target} TYPE)
-    #         if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
-    #             add_executable(${${PROJECT_NAME}_${_component}_NAMESPACE}::${_target} ALIAS ${_target})
-    #         else()
-    #             add_library(${${PROJECT_NAME}_${_component}_NAMESPACE}::${_target} ALIAS ${_target})
-    #         endif()
-    #     endforeach()
-    #     # Disable find_package for internally available packages. 
-    #     set(CMAKE_DISABLE_FIND_PACKAGE_${${PROJECT_NAME}_PACKAGE_NAME}_${_component} TRUE CACHE INTERNAL "" FORCE)
-    #     set(${${PROJECT_NAME}_PACKAGE_NAME}_${_component}_FOUND TRUE CACHE INTERNAL "" FORCE)
-    #     set(_CMakeCS_${${PROJECT_NAME}_PACKAGE_NAME}_${_component}_FOUND TRUE)
-    #     cmcs_set_global_property(PROPERTY _CMakeCS_${${PROJECT_NAME}_PACKAGE_NAME}_${_component}_FOUND)
-    #     set_property(GLOBAL APPEND PROPERTY PACKAGES_FOUND ${${PROJECT_NAME}_PACKAGE_NAME}_${_component})
-
-    #     cmcs_set_global_property(PROPERTY ${PROJECT_NAME}_${_component}_LOCKED)
-    # endforeach()
-
     # In Project find_package calls never work in build and require ALIAS targets
     # This export does export the targets into the build dir with absoulte paths.
     # It only works if the <packagename>Config.cmake has all requirements to run 
@@ -702,7 +684,6 @@ function(cmakejson_close_project)
     # endif()
 
     # This only exists @ install time
-
     if(EXPORTED_TARGETS)
         install(EXPORT ${EXPORT_NAME}
                 NAMESPACE ${EXPORT_NAMESPACE}:: 
@@ -795,11 +776,13 @@ macro(cmakejson_project _input _filename)
     else()
         set(project_func project)
     endif()
-    cmake_language(CALL ${project_func} "${CMakeJSON_PARSE_PROJECT_NAME}"
-                                        VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}${patch}${tweak}"
-                                        DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}"
-                                        HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}"
-                                        LANGUAGES ${languages})
+    if(NOT CURRENT_PROJECT OR CMakeJSON_PARSE_PROJECT_IS_SUPERBUILD OR CMakeJSON_PARSE_PROJECT_IS_EXTERNAL)
+        cmake_language(CALL ${project_func} "${CMakeJSON_PARSE_PROJECT_NAME}"
+                                            VERSION "${CMakeJSON_PARSE_PROJECT_VERSION}${patch}${tweak}"
+                                            DESCRIPTION "${CMakeJSON_PARSE_PROJECT_DESCRIPTION}"
+                                            HOMEPAGE_URL "${CMakeJSON_PARSE_PROJECT_HOMEPAGE}"
+                                            LANGUAGES ${languages})
+    endif()
     unset(project_func)
     unset(patch)
     unset(tweak)
