@@ -1,0 +1,4 @@
+## How does CMakeJSON parse the JSON files
+CMakeJSON parses the json files recursivly. The implementation can be viewed [here](../CMakeJSON/CMakeJSON_ParseJSON.cmake). The function doing the parsing is `cmakejson_parse_json`.<br>
+For the project JSON the parsed variables are named `CMakeJSON_PARSE_PROJECT(_<member|index>)+`. Using `index` only works for arrays. As an example: `CMakeJSON_PARSE_PROJECT_NAME` is the root `name` member in the JSON `CMakeJSON_PARSE_PROJECT_DEPENDENCIES_0_NAME` is the `name` member of the first element in the root array member `dependencies`. <br>
+For a target JSON it is similar but the variables are `CMakeJSON_PARSE_TARGET(_<member|index>)+` and only have function scope in `cmakejson_add_target`. <br>

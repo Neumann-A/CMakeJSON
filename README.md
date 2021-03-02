@@ -1,5 +1,7 @@
 # CMakeJSON
-CMakeJSON provides a way to declare CMake projects and targets via `*.json` files. Furthermore, it also automatically export your targets and keeps track of your dependencies to generate correct `<PackageName>Config.cmake` files for `find_package` to simply work for your project/package. 
+CMakeJSON provides a way to declare CMake projects and targets via `*.json` files. Furthermore, it also automatically export your targets and keeps track of your dependencies to generate correct `<PackageName>Config.cmake` files for `find_package` to simply work for your project/package. <br>
+CMake is the defactor standard for a cross platform (meta) buildsystem but some people do not like it due to its syntax and/or complexity. CMakeJSON gives those people another (maybe simpler&cleaner) approach to CMake. <br>
+In the current state, CMakeJSON is mainly targeted at smaller projects which have a not too complicated CMakeLists.txt. Bigger projects are also possible due to the possibility to mix normal CMake with CMakeJSON but further functionallity might be needed to ease the usage with CMakeJSON. <br>
 
 ### Usage
 The recommended way to use CMakeJSON is to include it as a submodule in your project and use `include(<submodulepath>/CMakeJSON/CMakeJSON.cmake)`.
@@ -9,11 +11,12 @@ CMakeJSON is based on the experince with [CMakeCS](https://github.com/Neumann-A/
 ---
 ## Documentation
 List of json members allowed for:
- - [projects](docs/project.md)
- - [targets](docs/targets.md)
+ - [project](docs/project.md)
+ - [target](docs/target.md)
  - To implement: [`Find<PackageName>.cmake`](docs/find.md)
 
 Other questions might be answered in the [FAQ](docs/faq.md) 
+[Parsing logic](docs/parsing.md)
 
 ---
 ## Quickstart
@@ -61,12 +64,23 @@ The simplest CMakeJSON project looks like this:
  - CMake variable expansion in JSON members
  - Getting target/project name from JSON file.
  - Mixing of JSON files and normal CMake. 
+ - Automatic target export for library targets (except `OBJECT` libraries).
  - Automatic `<PackageName>Config(Version).cmake` generation
+ - Automatic `FOLDER` property according to filesystem structure
+ - Automatic `source_group(TREE)` setting according to filesystem structure
+ - Support for [`feature_summary()`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)
+ - Automatic namespaced `ALIAS` targets and deactivation of `find_package` for CMakeJSON defined targets/packages for easier superbuild setups using `add_subdirectory` of projects
 
 In the future:
- - Automatic pc file generation.
- - More Awesome stuff
- - Things from the [ToDo List](docs/todo.md) 
+ - Automatic pc file generation. (Difficult since this a target based not package based. Needs some extra introspection from where an imported target originated)
+ - CTest/CDash/CPack stuff (missing experience for proper setup)
+ - More awesome stuff
+ - Things from the [ToDo List](docs/todo.md)
+ - Automatic `VS_DEBUGGER_ENVIRONMENT` for VS Generator + VCPKG toolchain?
+ - Automatic `vcpkg.json` generation? (The way the code is executed probably doesn't allow this. Since the manifest must be created before the first `project()` call. Probably can only create a `vcpkg.json.new` after everything has run)
+ - automatic Conan stuff? (don't know enough about conan to generate something)
+ - Installation of runtime deps. 
+
 
 ---
 ### Examples
