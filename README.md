@@ -1,71 +1,76 @@
 # CMakeJSON
-CMakeJSON is a collection of scripts to setup projects, tests, dependencies (via package managers) and other stuff The aim of CMakeJSON is to reduce the mental burden to setup CMake projects by providing a declarative project/component/target setup which automatically deals with correctly exporting and installing targets without too much effort. It can be used either from a build, install or even droped into your project. The recommended way to use CMakeJSON is to install it and use `find_package(CMakeJSON)` with `CMakeJSON_DIR` set to the directory containing the installed `CMakeJSONConfig.cmake` file.   
-CMakeJSON is based on the experince with CMakeCS and the newly added json parser in CMake. 
+CMakeJSON provides a way to declare CMake projects and targets via `*.json` files. Furthermore, it also automatically export your targets and keeps track of your dependencies to generate correct `<PackageName>Config.cmake` files for `find_package` to simply work for your project/package. 
 
-### Key features
+### Usage
+The recommended way to use CMakeJSON is to include it as a submodule in your project and use `include(<submodulepath>/CMakeJSON/CMakeJSON.cmake)`.
+CMakeJSON is based on the experince with [CMakeCS](https://github.com/Neumann-A/CMakeCommonSetup/) and the newly added JSON parser to CMake. Due to that a CMake version of at least 3.19 is required.
 
 
-### Future possible features
+---
+## Documentation
+List of json members allowed for:
+ - [projects](docs/project.md)
+ - [targets](docs/targets.md)
+ - To implement: [`Find<PackageName>.cmake`](docs/find.md)
 
- 
-### Features to probably never to be included
- - automatic download of third party dependencies. 3rd party dependencies should be handled by a package manager and not by the build system itself
+Other questions might be answered in the [FAQ](docs/faq.md) 
 
-## Examples
+---
+## Quickstart
 
-## Internals
+Examples for using CMakeJSON can be found in [examples](examples).
+The simplest CMakeJSON project looks like this:
 
-## The anatomy of every CMake project
- 1) Define toplevel project
- 3) (Define subprojects)
- 4) Import some (optional) dependencies (via find_package)
- 5) Define 'buildable' targets (libraries, executables, others [including code generators] )
- 6) Add something to those targets dependendent on some options or the found dependencies (sources,definitions,linkage,etc.)
- ---
- 7) install some (not necessary all) targets (sometimes forgotten)
- 8) export the installed targets of the project into a cmake file. (probably forgotten)
- 9) generate a config including the file from 8) with a find_dependency call for all required dependencies and write a version file (probably forgotten)
- 10) maybe restart with 1)
 
- ### Common problems from the view of package manager
- 
- To point 4)
- - having optional dependencies without an explicit option to enable disable the option.
- Observed Problems:
- - Link errors in static builds due to missing dependencies; Builds on different machine not reproduciable due to different system libraries.  
- Solution:
- - Have an explicit named option `<ProjectName>_ENABLE_<PackageName>` which is defaulted to `OFF`
-   (Yes there is `CMAKE_DISABLE_FIND_PACKAGE_<PackageName>` but this requires implicit knowledge that the project uses `<PackageName>`)
- - Define `find_package` dependencies on the project levels. Helps integrating those information into the later generated config file. 
+1. CMakeLists.txt:
+    ```
+    cmake_minimum_required(VERSION 3.19)
+    set(CMakeJSON_ENABLE_PROJECT_OVERRIDE ON) # defines a macro called project() to silence a CMake Warning
+    include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeJSON/CMakeJSON.cmake")
+    project("<projectname>.json")
+    # alternativly: if you don't want to use CMakeJSON_ENABLE_PROJECT_OVERRIDE
+    # project(something) # this project call is mandatory since CMake throws a dev warning otherwise
+    # cmakejson_project_file("<projectname>.json")
+    ```
+2. \<projectname\>.json read via `cmakejson_project_file(<filename>)`:
+    ```
+    {
+        "homepage" : "<someurl>",
+        "description" : "<somedescription>",
+        "version" : "0.1.0",
+        "languages" : ["CXX"],
+        "list" : [
+            "<libname>.target.json"
+        ]
+    }
+    ```
 
-### Common problems from the view of the author
- To point 6)
-  - linking imported targets without knowledge where they came from. 
- Observed Problems:
-  - missing find_dependency call in `<PackageName>Config.cmake` (if it even exits)
- Solution: 
-  - 
+3. \<libname\>.target.json read via `cmakejson_target_file(<filename>)`:
+    ```
+    {
+        "target_type" : "library",
+        "sources" : [
+            "src/somesource.cpp"
+        ]
+    }
+    ```
+---
 
---- 
- TODO
- Improve README.md
- 
- (things to check)
- Check global property ENABLED_FEATURES and file FeatureSummary.cmake
- GLOBAL_DEPENDS_NO_CYCLES
- TARGETS:
- EXPORT_PROPERTIES
- WINDOWS_EXPORT_ALL_SYMBOLS
- FOLDERS
+## Key features
+ - JSON based project/target definitions
+ - CMake variable expansion in JSON members
+ - Getting target/project name from JSON file.
+ - Mixing of JSON files and normal CMake. 
+ - Automatic `<PackageName>Config(Version).cmake` generation
 
- Global:
- PACKAGES_FOUND
- PACKAGES_NOT_FOUND
+In the future:
+ - Automatic pc file generation.
+ - More Awesome stuff
+ - Things from the [ToDo List](docs/todo.md) 
 
- Directory properties:
- BUILDSYSTEM_TARGETS
- VARIABLES
- CMAKE_CONFIGURE_DEPENDS
+---
+### Examples
+Different Examples for using CMakeJSON can be found in [examples](examples).
 
- - Add Target/Project options and register them to add them into the generated config
- - Add the possibility to create instantiations of C++ templates in a common way
+---
+### Internals
