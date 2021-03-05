@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://raw.githubusercontent.com/Neumann-A/CMakeJSON/main/CMakeJSON/schemas/project.schema.json",
+    "title": "CMakeJSON Target Definition JSON",
+    "description": "CMakeJSON Target Definition JSON. See https://github.com/Neumann-A/CMakeJSON/main/docs/target.md.",
+    "type": "object",
+    "$defs" : {
+
+    },
+    "properties" : {
+        "name" : {
+            "description" : "Name of the target",
+            "type" : "string",
+            "default-value" : "Filename without longest extensions"
+        }
+
+    }
+
+}
