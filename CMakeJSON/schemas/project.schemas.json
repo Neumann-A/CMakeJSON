@@ -5,7 +5,51 @@
     "description": "CMakeJSON Project Definition JSON. See https://github.com/Neumann-A/CMakeJSON/main/docs/project.md.",
     "type": "object",
     "$defs" : {
-
+        "dependency" : {
+            "oneOf": [ {
+                "description" : "Name of the dependency for `find_package(name)`",
+                "type": "string"
+            },
+            {
+                "type" : "object",
+                "properties" : {
+                    "name" : {
+                        "description" : "Name of the dependency for `find_package(name)`",
+                        "type" : "string"
+                    },
+                    "version" : {
+                        "description" : "Version of the dependency `find_package(<PackageName> <version>)`",
+                        "type" : "string"
+                    },
+                    "description" : {
+                        "description" : "(unused) Description for the dependency",
+                        "type" : "string"
+                    },
+                    "purpose" : {
+                        "description" : "Purpose of the dependency within the project. See [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)",
+                        "type" : "string"
+                    },
+                    "components" :  {
+                        "description" : "Components to add to `find_package(<PackageName> COMPONENTS <components>)`",
+                        "type" : "string"
+                    },
+                    "find_options" : {
+                        "description" : "Additional options to add to `find_package(<PackageName> <find_options>)`",
+                        "type" : "string"
+                    },
+                    "condition" : {
+                        "description" : "Condition to perform the `find_package()` call (Note: **Only** use this for platform based conditions. Option based conditions should list their dependencies under the relevant option!)",
+                        "type" : "string"
+                    },
+                    "pkg_config_name" : {
+                        "description" : "(unused) Alternative pkg-config name",
+                        "type" : "string"
+                    }
+                },
+                "required" : [ "name" ]
+            }
+            ]
+        }
     },
     "properties" : {
         "name" : {
@@ -31,7 +75,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "uniqueItems": true
         },
         "package_name" : {
             "description" : "Name used for `find_package()`",
@@ -47,7 +92,109 @@
             "description" : "According to [this](https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html#command:write_basic_package_version_file)",
             "type" : "string",
             "default-value" : "AnyNewerVersion"
+        },
+        "list" : {
+            "description" : "Files or directories to parse/include/add",
+            "type" : "array",
+            "$TODO" : null ,
+            "items": {
+                "type" :"object"
+            },
+            "uniqueItems": true
+        },
+        "options" : {
+            "description" : "Options of the project",
+            "type" : "array",
+            "items": {
+                "type" :"object",
+                "properties" :{
+                    "name" : {
+                        "description" : "Name of option displayed by [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)",
+                        "type" : "string",
+                        "default-value" : "lowercaser `variable` without `WITH_`"
+                    },
+                    "variable" : {
+                        "description" : "Variable used by the option",
+                        "type" : "string",
+                        "default-value" : "Uppercase `${package_name}_WITH_${option_name}`"
+                    },
+                    "description" : {
+                        "description" : "Description for the option",
+                        "type" : "string"
+                    },
+                    "type" : {
+                        "description" : "Valid CMake cache variable type",
+                        "type" : "string",
+                        "default-value" : "BOOL"
+                    },
+                    "default_value" : {
+                        "description" : "Default value of the option variable",
+                        "type" : "string",
+                        "default-value" : "OFF for BOOL otherwise an empty string"
+                    },
+                    "condition" : {
+                        "description" : "Conditional Option. See [here](https://cmake.org/cmake/help/latest/module/CMakeDependentOption.html) for details",
+                        "type" : "string"
+                    },
+                    "export" : {
+                        "description" : "Export the variable into the generated `<PackeName>Config.cmake` and make it visible to `find_package()` callers",
+                        "type" : "string"
+                    },
+                    "no_feature_info" : {
+                        "description" : "disable call to `add_feature_info` (only viable for type BOOL)",
+                        "type" : "boolean"
+                    },
+                    "valid_values" : {
+                        "description" : "Valid values for the option (only for STRING type) (via [STRINGS](https://cmake.org/cmake/help/latest/prop_cache/STRINGS.html) property)",
+                        "type" : "boolean"
+                    },
+                    "dependencies" : {
+                        "description" : "Optional dependencies for the project.",
+                        "type" : "array",
+                        "items" : {
+                            "$ref": "#/$defs/dependency"
+                        }
+                    }
+                },
+                "required": [ "name"]
+            },
+            "uniqueItems": true
+        },
+        "dependencies" : {
+            "description" : "Dependencies of the project",
+            "type" : "array",
+            "items": {
+                "$ref": "#/$defs/dependency"
+            },
+            "uniqueItems": true
+        },
+        "cmake_config_install_destination" : {
+            "description" : "Installation destination of the `<PackageName>Config.cmake`",
+            "type" : "string",
+            "default-value" : "${CMAKE_INSTALL_DATAROOTDIR}/${package_name}"
+        },
+        "usage_include_directory" : {
+            "description" : "usage (INTERFACE) include directory to add to the exported targets",
+            "type" : "string",
+            "default-value" : "`${CMAKE_INSTALL_INCLUDEDIR}/(package_name-version)`"
+        },
+        "public_header_install_destination" : {
+            "description" : "Installation directory for public headers",
+            "type" : "string",
+            "default-value" : "`${CMAKE_INSTALL_INCLUDEDIR}/(package_name-version/)package_name`"
+        },
+        "version_installed" : {
+            "description" : "Use an extra directory `package_name-version_major` for installed includes. ",
+            "type" : "boolean"
+        },
+        "component_name" : {
+            "description" : "Name of the subcomponent",
+            "type" : "string"
+        },
+        "public_cmake_module_path" :  {
+            "description" : "Public CMake module path. This directory will be installed alongside the generated targets/configs",
+            "type" : "string"
         }
-    }
-
+    },
+    "required": ["homepage","description", "languages"]
 }
