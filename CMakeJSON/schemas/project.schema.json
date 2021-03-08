@@ -55,7 +55,7 @@
         "name" : {
             "description" : "Name of the project",
             "type" : "string",
-            "default-value" : "Filename without longest extensions"
+            "default" : "Filename without longest extensions"
         },
         "description" : {
             "description" : "Description of the project",
@@ -68,7 +68,7 @@
         "version" : {
             "description" : "Version of the project",
             "type" : "string",
-            "default-value" : "0.1"
+            "default" : "0.1"
         },
         "languages" : {
             "description" : "Languages used by the project",
@@ -81,17 +81,17 @@
         "package_name" : {
             "description" : "Name used for `find_package()`",
             "type" : "string",
-            "default-value" : "<${parrent_package_name}_>${name}"
+            "default" : "<${parrent_package_name}_>${name}"
         },
         "export_namespace" : {
             "description" : "Export namespace for targets",
             "type" : "string",
-            "default-value" : "`<${parent_export_namespace}::>${package_name}`"
+            "default" : "`<${parent_export_namespace}::>${package_name}`"
         },
         "version_compatibility" : {
             "description" : "According to [this](https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html#command:write_basic_package_version_file)",
             "type" : "string",
-            "default-value" : "AnyNewerVersion"
+            "default" : "AnyNewerVersion"
         },
         "list" : {
             "description" : "Files or directories to parse/include/add",
@@ -111,12 +111,12 @@
                     "name" : {
                         "description" : "Name of option displayed by [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)",
                         "type" : "string",
-                        "default-value" : "lowercaser `variable` without `WITH_`"
+                        "default" : "lowercaser `variable` without `WITH_`"
                     },
                     "variable" : {
                         "description" : "Variable used by the option",
                         "type" : "string",
-                        "default-value" : "Uppercase `${package_name}_WITH_${option_name}`"
+                        "default" : "Uppercase `${package_name}_WITH_${option_name}`"
                     },
                     "description" : {
                         "description" : "Description for the option",
@@ -125,12 +125,12 @@
                     "type" : {
                         "description" : "Valid CMake cache variable type",
                         "type" : "string",
-                        "default-value" : "BOOL"
+                        "default" : "BOOL"
                     },
                     "default_value" : {
                         "description" : "Default value of the option variable",
                         "type" : "string",
-                        "default-value" : "OFF for BOOL otherwise an empty string"
+                        "default" : "OFF for BOOL otherwise an empty string"
                     },
                     "condition" : {
                         "description" : "Conditional Option. See [here](https://cmake.org/cmake/help/latest/module/CMakeDependentOption.html) for details",
@@ -171,17 +171,17 @@
         "cmake_config_install_destination" : {
             "description" : "Installation destination of the `<PackageName>Config.cmake`",
             "type" : "string",
-            "default-value" : "${CMAKE_INSTALL_DATAROOTDIR}/${package_name}"
+            "default" : "${CMAKE_INSTALL_DATAROOTDIR}/${package_name}"
         },
         "usage_include_directory" : {
             "description" : "usage (INTERFACE) include directory to add to the exported targets",
             "type" : "string",
-            "default-value" : "`${CMAKE_INSTALL_INCLUDEDIR}/(package_name-version)`"
+            "default" : "`${CMAKE_INSTALL_INCLUDEDIR}/(package_name-version)`"
         },
         "public_header_install_destination" : {
             "description" : "Installation directory for public headers",
             "type" : "string",
-            "default-value" : "`${CMAKE_INSTALL_INCLUDEDIR}/(package_name-version/)package_name`"
+            "default" : "`${CMAKE_INSTALL_INCLUDEDIR}/(package_name-version/)package_name`"
         },
         "version_installed" : {
             "description" : "Use an extra directory `package_name-version_major` for installed includes. ",

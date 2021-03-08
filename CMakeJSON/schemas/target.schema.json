@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://raw.githubusercontent.com/Neumann-A/CMakeJSON/main/CMakeJSON/schemas/project.schema.json",
+    "$id": "https://raw.githubusercontent.com/Neumann-A/CMakeJSON/main/CMakeJSON/schemas/target.schema.json",
     "title": "CMakeJSON Target Definition JSON",
     "description": "CMakeJSON Target Definition JSON. See https://github.com/Neumann-A/CMakeJSON/main/docs/target.md.",
     "type": "object",
@@ -44,7 +44,7 @@
         "name" : {
             "description" : "Name of the target",
             "type" : "string",
-            "default-value" : "Filename without longest extensions"
+            "default" : "Filename without longest extensions"
         },
         "target_type" : {
             "description" : "Type of the target",
@@ -66,7 +66,7 @@
         "export" : {
             "description" : "Export the target",
             "type" : "boolean",
-            "default-value" : "ON except for `OBJECT` libraries and `custom_targets`"
+            "default" : "ON except for `OBJECT` libraries and `custom_targets`"
         },
         "public_headers" : {
             "description" : "list of public headers. Note: All headers need to be in the same directory. Otherwise don't use this!",
