@@ -5,8 +5,45 @@
     "description": "CMakeJSON Find Module Definition JSON. See https://github.com/Neumann-A/CMakeJSON/main/docs/find.md.",
     "type": "object",
     "$defs" : {
+        "dependency" : {
+            "oneOf": [ {
+                "description" : "Name of the dependency for `find_package(name)`",
+                "type": "string"
+            },
+            {
+                "type" : "object",
+                "properties" : {
+                    "name" : {
+                        "description" : "Name of the dependency for `find_package(name)`",
+                        "type" : "string"
+                    },
+                    "version" : {
+                        "description" : "Version of the dependency `find_package(<PackageName> <version>)`",
+                        "type" : "string"
+                    },
+                    "components" :  {
+                        "description" : "Components to add to `find_package(<PackageName> COMPONENTS <components>)`",
+                        "type" : "string"
+                    },
+                    "find_options" : {
+                        "description" : "Additional options to add to `find_package(<PackageName> <find_options>)`",
+                        "type" : "string"
+                    },
+                    "condition" : {
+                        "description" : "Condition to perform the `find_package()` call (Note: **Only** use this for platform based conditions. Option based conditions should list their dependencies under the relevant option!)",
+                        "type" : "string"
+                    }
+                },
+                "required" : [ "name" ]
+            }
+            ]
+        }
     },
     "properties": {
+        "description" : {
+            "description" : "Description for the package. See [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)",
+            "type" : "string"
+        },
         "config_name" : {
             "description" : "Alternative name to search for. Be aware `find_package` is case senstive!",
             "type" : "string",
@@ -22,6 +59,21 @@
             "type" : "string",
             "default" : "lowercase `${CMake_FIND_PACKAGE_NAME}`"
         },
+        "version_extraction" : {
+            "description" : "Required information to extract/obtain a version if no (pkg/cmale)config is found",
+            "type" : "object",
+            "properties" :{
+                "file" : {
+                    "description" : "File to read in for version extraction",
+                    "type" : "string"
+                },
+                "code" : {
+                    "description" : "CMake code to obtain the version from file. Parameter 1 -> File Input. Paramter 2 -> Version Output",
+                    "type" : "string"
+                }
+            }
+        }
+        ,
         "configurations" : {
             "description" : "Setup to search for different configurations.",
             "type" : "array",

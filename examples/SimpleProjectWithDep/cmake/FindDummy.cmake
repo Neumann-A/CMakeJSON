@@ -1,0 +1,1 @@
+cmakejson_find_module_file("FindDummy.json")
