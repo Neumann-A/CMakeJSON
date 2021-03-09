@@ -64,6 +64,7 @@ list(APPEND cmakejson_cmake_files
     ParseJSON
     Project
     Target
+    FindModule
 )
 
 foreach(_file IN LISTS cmakejson_cmake_files)

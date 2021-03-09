@@ -1,0 +1,115 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://raw.githubusercontent.com/Neumann-A/CMakeJSON/main/CMakeJSON/schemas/find.schema.json",
+    "title": "CMakeJSON Find Module Definition JSON",
+    "description": "CMakeJSON Find Module Definition JSON. See https://github.com/Neumann-A/CMakeJSON/main/docs/find.md.",
+    "type": "object",
+    "$defs" : {
+    },
+    "properties": {
+        "config_name" : {
+            "description" : "Alternative name to search for. Be aware `find_package` is case senstive!",
+            "type" : "string",
+            "default" : "`${CMake_FIND_PACKAGE_NAME}`"
+        },
+        "skip_config_mode" : {
+            "description" : "Skip trying to use config mode.",
+            "type" : "boolean",
+            "default" : "OFF"
+        },
+        "pkg_config_name" : {
+            "description" : "Alternative pkg-config name to search for.",
+            "type" : "string",
+            "default" : "lowercase `${CMake_FIND_PACKAGE_NAME}`"
+        },
+        "configurations" : {
+            "description" : "Setup to search for different configurations.",
+            "type" : "array",
+            "items": {
+                "type" : "object",
+                "properties" :{
+                    "config" : {
+                        "description": "Name of the configuration",
+                        "type" : "string"
+                    },
+                    "lib_prefixes" : {
+                        "description": "additional library prefixes of the configuration",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        },
+                        "uniqueItems": true
+                    },
+                    "lib_suffixes" : {
+                        "description": "additional library suffixes of the configuration",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        },
+                        "uniqueItems": true
+                    }
+                }
+            },
+            "uniqueItems": true,
+            "default" : " [ \"{\"config\": \"DEBUG\", \"suffix\": [\"d\", \"_d\"]}\", \"{\"config\": \"RELEASE\"}\"]"
+        },
+        "dependencies" : {
+
+        },
+        "imported_targets" : {
+            "type" : "array",
+            "items" : {
+                "type" : "object",
+                "properties": {
+                    "name" : {
+                        "description": "Target name of the imported target",
+                        "type" : "string"
+                    },
+                    "languages" : {
+                        "description": "Link interface languages",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        },
+                        "uniqueItems": true,
+                        "default" : "[\"C\"]"
+                    },
+                    "library_names" : {
+                        "description": "Name of the libraries to search for",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        },
+                        "uniqueItems": true
+                    },
+                    "config_target" : {
+                        "description": "Name of the target if found via an exported cmake config.",
+                        "type" : "string"
+                    },
+                    "link_libraries" : {
+                        "description": "Targets to link against! (Only interface)",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        }
+                    },
+                    "header_file" : {
+                        "description": "Header file to search for to add to the include interface",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        }
+                    },
+                    "include_directories" : {
+                        "description": "Include directories to add! (Only interface)",
+                        "type" : "array",
+                        "items": {
+                            "type" : "string"
+                        }
+                    }
+                }
+            },
+            "uniqueItems": true
+        }
+    }
+}
