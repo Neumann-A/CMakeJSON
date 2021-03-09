@@ -44,6 +44,10 @@
             "description" : "Description for the package. See [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)",
             "type" : "string"
         },
+        "homepage" : {
+            "description" : "Homepage of the package. See [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)",
+            "type" : "string"
+        },
         "config_name" : {
             "description" : "Alternative name to search for. Be aware `find_package` is case senstive!",
             "type" : "string",
@@ -67,8 +71,8 @@
                     "description" : "File to read in for version extraction",
                     "type" : "string"
                 },
-                "code" : {
-                    "description" : "CMake code to obtain the version from file. Parameter 1 -> File Input. Paramter 2 -> Version Output",
+                "regex" : {
+                    "description" : "CMake regex to obtain the version from the file. The full version string needs to be the first match",
                     "type" : "string"
                 }
             }
@@ -106,7 +110,9 @@
             "default" : " [ \"{\"config\": \"DEBUG\", \"suffix\": [\"d\", \"_d\"]}\", \"{\"config\": \"RELEASE\"}\"]"
         },
         "dependencies" : {
-
+            "type" : "array",
+            "items": { "$ref" :"#/$defs/dependency"
+            }
         },
         "imported_targets" : {
             "type" : "array",

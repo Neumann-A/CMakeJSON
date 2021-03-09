@@ -142,6 +142,19 @@ function(cmakejson_setup_module_dependencies _prefix)
     else()
         message(${CMakeJSON_MSG_ERROR_TYPE} "Dependency parsed as '${_prefix}' is missing a name!")
     endif()
+    set(_findstr "${dep_name}")
+    if(${_prefix}_VERSION)
+        list(APPEND _findstr "${${_prefix}_VERSION}")
+    endif()
+    if(${_prefix}_COMPONENTS)
+        list(APPEND _findstr COMPONENTS "${${_prefix}_COMPONENTS}")
+    endif()
+    if(NOT DEFINED ${_prefix}_CONDITION)
+        set(${_prefix}_CONDITION TRUE)
+    endif()
+    if(${${_prefix}_CONDITION})
+        find_package(${_findstr} ${${_prefix}_FIND_OPTIONS})
+    endif()
 endfunction(cmakejson_setup_module_dependencies _prefix)
 
 
@@ -154,7 +167,18 @@ macro(cmakejson_find_module _contents)
                          OUTPUT_LIST_CREATED_VARIABLES "TARGET_PARSED_VARIABLES"
     )
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
-    # Seacrh via config
+
+    if(CMakeJSON_PARSE_MODULE_DESCRIPTION)
+        set_package_properties(${CMAKE_FIND_PACKAGE_NAME} PROPERTIES
+                               DESCRIPTION ${CMakeJSON_PARSE_MODULE_DESCRIPTION}
+                              )
+    endif()
+    if(CMakeJSON_PARSE_MODULE_HOMEPAGE)
+        set_package_properties(${CMAKE_FIND_PACKAGE_NAME} PROPERTIES
+                               URL ${CMakeJSON_PARSE_MODULE_HOMEPAGE}
+                               )
+    endif()
+    # Search via config
     if(NOT CMakeJSON_PARSE_MODULE_SKIP_CONFIG_MODE)
         cmakejson_find_package_config()
     endif()
@@ -179,12 +203,21 @@ macro(cmakejson_find_module _contents)
                 set(CMakeJSON_MODULE_LANGUAGES "C") # TODO: maybe switch that one the header file ending?
             endif()
             cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_MODULE_IMPORTED_TARGETS cmakejson_create_imported_targets _found_targets)
+            if(DEFINED CMakeJSON_PARSE_MODULE_VERSION_EXTRACTION_FILE)
+                file(READ "${CMakeJSON_PARSE_MODULE_VERSION_EXTRACTION_FILE}" _contents)
+                string(REGEX REPLACE "${CMakeJSON_PARSE_MODULE_VERSION_EXTRACTION_REGEX}" "\\1" ${CMAKE_FIND_PACKAGE_NAME}_VERSION ${_contents})
+            endif()
+            set(_version_check)
+            if(${CMAKE_FIND_PACKAGE_NAME}_VERSION)
+                set(_version_check VERSION_VAR ${CMAKE_FIND_PACKAGE_NAME}_VERSION HANDLE_VERSION_RANGE)
+            endif()
             find_package_handle_standard_args(${CMAKE_FIND_PACKAGE_NAME} 
                 REQUIRED_VARS ${_found_targets}
-                #HANDLE_VERSION_RANGE  # TODO: support version extraction from header?
-                #VERSION_VAR <somevar>
                 HANDLE_COMPONENTS
+                ${_version_check}
             )
+            unset(_version_check)
+            unset(_found_targets)
         else()
             # Pkgconfig available -> All imported targets get redirected to the pkgconfig target
             cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_MODULE_IMPORTED_TARGETS cmakejson_redirect_imported_targets_to_pkgconfig_target "PkgConfig::${CMAKE_FIND_PACKAGE_NAME}_PC")
@@ -199,11 +232,6 @@ macro(cmakejson_find_module _contents)
         # TODO: Run fetchcontent or external_project_add?
     endif()
 
-    find_package_handle_standard_args(${CMAKE_FIND_PACKAGE_NAME} 
-    #HANDLE_VERSION_RANGE  # TODO: support version extraction from header?
-    #VERSION_VAR <somevar>
-    HANDLE_COMPONENTS
-    )
 endmacro()
 
 macro(cmakejson_find_module_file _file)
