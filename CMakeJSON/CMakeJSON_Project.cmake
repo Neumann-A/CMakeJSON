@@ -462,6 +462,14 @@ function(cmakejson_generate_project_config)
         string(APPEND _config_contents "@PACKAGE_INIT@\n")
         string(APPEND _config_contents "cmake_policy (PUSH)\n")
         string(APPEND _config_contents "cmake_minimum_required (VERSION 3.19)\n\n")
+
+        # Force case correct calling of in find_package
+        string(APPEND _config_contents "get_filename_component(_current_file_name \"\${CMAKE_CURRENT_LIST_FILE}\" NAME_WE)\n")
+        string(APPEND _config_contents "string(REGEX REPLACE \"-?[Cc][Oo][Nn][Ff][Ii][Gg]\" \"\" _package_name \"${_current_file_name}\")\n")
+        string(APPEND _config_contents "if(NOT _package_name STREQUAL CMAKE_FIND_PACKAGE_NAME)\n")
+        string(APPEND _config_contents "\tmessage(FATAL_ERROR \"CMAKE_FIND_PACKAGE_NAME='\${CMAKE_FIND_PACKAGE_NAME}' does not agree in case with <Name>Config.cmake (Name='\${_package_name}')\n To be crossplatform compatible the names need to agree in case!\")\n")
+        string(APPEND _config_contents "endif()\n")
+
         # string(APPEND _config_contents "include(FindPackageHandleStandardArgs)\n\n")
         list(APPEND ${PROJECT_NAME}_CONFIG_VARS CMAKE_CURRENT_LIST_FILE)
         if(PUBLIC_CMAKE_MODULE_PATH)
