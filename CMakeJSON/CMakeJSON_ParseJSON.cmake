@@ -24,7 +24,7 @@ function(cmakejson_parse_json)
     set(access_list ${${_PREFIX}_ACCESS_LIST})
     string(JSON length ERROR_VARIABLE err LENGTH "${${_PREFIX}_JSON_INPUT}" ${${_PREFIX}_CURRENT_JSON_MEMBER_BASE})
     if(NOT length)
-        message(FATAL_ERROR "No length in '${${_PREFIX}_CURRENT_JSON_MEMBER_BASE}'")
+        message(FATAL_ERROR "No length in '${${_PREFIX}_CURRENT_JSON_MEMBER_BASE}'; PREFIX:${_PREFIX}")
     endif()
     math(EXPR range_length "${length}-1") # Correct range stop in for loop
     if(${_PREFIX}_IS_ARRAY)
