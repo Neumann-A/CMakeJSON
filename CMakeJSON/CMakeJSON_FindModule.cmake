@@ -16,8 +16,7 @@ function(cmakejson_gather_json_array_configuration_as_list _prefix _outvar)
 endfunction()
 
 function(cmakejson_create_imported_targets _prefix _found_vars)
-    
-    set(_target ${CMAKE_FIND_PACKAGE_NAME}::${${_prefix}_NAME}))
+    set(_target ${CMAKE_FIND_PACKAGE_NAME}::${${_prefix}_NAME})
     if(NOT TARGET ${_target})
         set(_mod_found_name ${CMAKE_FIND_PACKAGE_NAME}_TARGET_${${_prefix}_NAME}_FOUND)
         set(${_mod_found_name} FALSE PARENT_SCOPE)
@@ -59,7 +58,7 @@ function(cmakejson_create_imported_targets _prefix _found_vars)
             if(${CMAKE_FIND_PACKAGE_NAME}_${${_prefix}_NAME}_LIBRARY_${_config})
                 set_target_properties(${_target} PROPERTIES
                                                     IMPORTED_LOCATION_${_config}
-                                                    ${${CMAKE_FIND_PACKAGE_NAME}_${${_prefix}_NAME}_LIBRARY_${_config}})
+                                                    ${${CMAKE_FIND_PACKAGE_NAME}_${${_prefix}_NAME}_LIBRARY_${_config}}
                                                     IMPORTED_LINK_INTERFACE_LANGUAGES
                                                     ${CMakeJSON_MODULE_LANGUAGES}
                                                     )
@@ -112,7 +111,7 @@ macro(cmakejson_find_package_config)
 endmacro()
 
 function(cmakejson_redirect_imported_targets_to_pkgconfig_target _prefix _pkgconfigtarget)
-    set(_target ${CMAKE_FIND_PACKAGE_NAME}::${${_prefix}_NAME}))
+    set(_target ${CMAKE_FIND_PACKAGE_NAME}::${${_prefix}_NAME})
     if(NOT TARGET ${_target})
         add_library(${_target} INTERFACE IMPORTED)
         target_link_libraries(${_target} INTERFACE ${_pkgconfigtarget})
@@ -162,7 +161,7 @@ macro(cmakejson_find_module _contents)
     cmakejson_validate_find_module_json("${_contents}")
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "parse")
-    cmakejson_parse_json(JSON_INPUT "${_input}"
+    cmakejson_parse_json(JSON_INPUT "${_contents}"
                          VARIABLE_PREFIX "MODULE"
                          OUTPUT_LIST_CREATED_VARIABLES "TARGET_PARSED_VARIABLES"
     )
@@ -191,7 +190,7 @@ macro(cmakejson_find_module _contents)
         if(NOT ${CMAKE_FIND_PACKAGE_NAME}_PKGCONFIG)
             foreach(_component IN LISTS ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
                 find_package(${CMAKE_FIND_PACKAGE_NAME}_${_component})
-            endif()
+            endforeach()
             cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_MODULE_DEPENDENCIES cmakejson_setup_module_dependencies)
             cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_MODULE_CONFIGURATIONS cmakejson_gather_json_array_configuration_as_list CMakeJSON_MODULE_CONFIGURATIONS)
             if(NOT CMakeJSON_MODULE_CONFIGURATIONS)
@@ -240,7 +239,7 @@ macro(cmakejson_find_module_file _file)
     if(NOT EXISTS "${file}")
         message(FATAL_ERROR "File '${_file}' does not exists!")
     endif()
-    message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating target from file: '${_file}'")
+    message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating module from file: '${_file}'")
     get_filename_component(_filename "${_file}" NAME_WE)
     file(READ "${file}" _contents)
     cmakejson_find_module("${_contents}")
