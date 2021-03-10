@@ -141,7 +141,7 @@
                         "uniqueItems": true
                     },
                     "config_target" : {
-                        "description": "Name of the target if found via an exported cmake config.",
+                        "description": "Name of the target if found via an exported cmake config (required if different).",
                         "type" : "string"
                     },
                     "link_libraries" : {
@@ -165,7 +165,8 @@
                             "type" : "string"
                         }
                     }
-                }
+                },
+                "required" : [ "name" ]
             },
             "uniqueItems": true
         }
