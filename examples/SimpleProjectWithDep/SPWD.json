@@ -24,7 +24,8 @@
         }
     ],
     "dependencies": [
-        "SP"
+        "SP",
+        "Dummy"
     ],
     "public_cmake_module_path" : "cmake",
     "list" : [

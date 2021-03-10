@@ -1,1 +1,1 @@
-cmakejson_find_module_file("FindDummy.json")
+cmakejson_find_module_file("${CMAKE_CURRENT_LIST_DIR}/FindDummy.json")

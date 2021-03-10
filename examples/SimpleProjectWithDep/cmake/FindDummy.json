@@ -3,7 +3,9 @@
     "dependencies" : [
         "Threads"
     ],
+    "description" : "Just a dummy find module.",
     "imported_targets" : [{
+        "name" : "${CMAKE_FIND_PACKAGE_NAME}",
         "library_names" : ["foo", "dummy"],
         "header_file" : [ "bar", "dummy.hpp"],
         "languages" : [ "CXX"]
