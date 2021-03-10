@@ -45,6 +45,7 @@ cmake_dependent_option(CMakeJSON_DEBUG_PARSE "Enable additional debug messages w
 cmake_dependent_option(CMakeJSON_DEBUG_PROJECT "Enable additional debug messages while creating projects/components" ON "CMakeJSON_DEBUG" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_PROJECT_OPTIONS "Enable additional debug messages while creating project options" ON "CMakeJSON_DEBUG" OFF)
 cmake_dependent_option(CMakeJSON_DEBUG_TARGET "Enable additional debug messages while creating targets" ON "CMakeJSON_DEBUG" OFF)
+cmake_dependent_option(CMakeJSON_DEBUG_FIND_MODULE "Enable additional debug messages while creating find modules" ON "CMakeJSON_DEBUG" OFF)
 if(CMakeJSON_DEBUG)
     set(CMAKE_MESSAGE_CONTEXT_SHOW ON) # Locally override user value
 endif()
