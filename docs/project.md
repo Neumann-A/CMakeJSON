@@ -42,7 +42,7 @@ Everything with a default is optional <br>
  - `description` (unused) : Description for the dependency. 
  - `purpose` : Purpose of the dependency within the project. See [`feature_summary`](https://cmake.org/cmake/help/latest/module/FeatureSummary.html)
  - `components` : Components to add to `find_package(<PackageName> COMPONENTS <components>)`
- - `find_options` : additional options to add to `find_package(<PackageName> <find_options>)`
+ - `find_options` : Additional options to add to `find_package(<PackageName> <find_options>)`
  - `condition` : Condition to perform the `find_package()` call (Note: **Only** use this for platform based conditions. Option based conditions should list their dependencies under the relevant option!)
 
 Please also refer to CMake [`find_package(<PackageName>)`](https://cmake.org/cmake/help/latest/command/find_package.html)

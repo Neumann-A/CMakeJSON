@@ -1,0 +1,144 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://raw.githubusercontent.com/Neumann-A/CMakeJSON/main/CMakeJSON/schemas/target.schema.json",
+    "title": "CMakeJSON Target Definition JSON",
+    "description": "CMakeJSON Target Definition JSON. See https://github.com/Neumann-A/CMakeJSON/main/docs/target.md.",
+    "type": "object",
+    "$defs" : {
+        "cmake_usage_description" : {
+            "type" : "object",
+            "properties" :
+            {   
+                "private" : {
+                    "description" : "Add private items to target",
+                    "type" : "array",
+                    "items" : {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                },
+                "public" : {
+                    "description" : "Add public items to target",
+                    "type" : "array",
+                    "items" : {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                },
+                "interface" : {
+                    "description" : "Add interface items to target",
+                    "type" : "array",
+                    "items" : {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                }
+            }
+        }
+    },
+    "properties" : {
+        "condition" : {
+            "description" : "Condition to include/parse/setup the target",
+            "type" : "string"
+        },
+        "name" : {
+            "description" : "Name of the target",
+            "type" : "string",
+            "default" : "Filename without longest extensions"
+        },
+        "target_type" : {
+            "description" : "Type of the target",
+            "type" : "string",
+            "pattern" :"^(library|executable|custom_target)$"
+        },
+        "parameters" : {
+            "description" : "Parameters to add to the target generation of `target_type` (Use this especially for `custom_target`)",
+            "type" : "string"
+        },
+        "sources" : {
+            "description" : "Sources to pass directly at the end of `add_<target_type>` command",
+            "type" : "string"
+        },
+        "add_depenencies" : {
+            "description" : "other target dependencies to add to the target",
+            "type" : "string"
+        },
+        "export" : {
+            "description" : "Export the target",
+            "type" : "boolean",
+            "default" : "ON except for `OBJECT` libraries and `custom_targets`"
+        },
+        "public_headers" : {
+            "description" : "list of public headers. Note: All headers need to be in the same directory. Otherwise don't use this!",
+            "type" : "array",
+            "items" : {
+                "type": "string"
+            },
+            "uniqueItems": true
+        },
+        "properties" : {
+            "description" : "Properties to set for the target",
+            "type" : "array",
+            "items" : {
+                "type" : "object",
+                "properties" : {
+                    "name" : {
+                        "description" : "Name of the target property to set",
+                        "type" : "string"
+                    },
+                    "value" : {
+                        "description" : "Value of the target property to set",
+                        "type" : "string"
+                    },
+                    "append_option" : {
+                        "description" : "Append option to use",
+                        "type" : "string",
+                        "pattern" : "^(APPEND|APPEND_STRING)$"
+                    }
+                },
+                "required": ["name","value"]
+            }
+        },
+        "target_install_parameters" : {
+            "description" : "Custom parameters to pass `install(TARGETS)`. (Note: Don't pass export parameters! These are handled by CMakeJSON)",
+            "type" : "string"
+        },
+        "compile_definitions" : {
+            "description" : "Compile definitions to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "compile_features" : {
+            "description" : "Compile features the target uses",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "compile_options" : {
+            "description" : "Compile options to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "include_directories" : {
+            "description" : "Include directories to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "link_directories" : {
+            "description" : "Link directories to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "link_libraries" : {
+            "description" : "Link libraries to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "link_options" : {
+            "description" : "Link options to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "precompile_headers" : {
+            "description" : "Precompile headers to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        },
+        "target_sources" : {
+            "description" : "Sources to add to the target",
+            "$ref" :"#/$defs/cmake_usage_description"
+        }
+    },
+    "required": ["target_type"]
+}
