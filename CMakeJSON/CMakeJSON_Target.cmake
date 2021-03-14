@@ -17,13 +17,14 @@ endfunction()
 
 function(cmakejson_add_public_header _prefix _target)
     set(element ${_prefix})
-    source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${element})
-    set_property(TARGET ${_target} APPEND PROPERTY PUBLIC_HEADER ${element})
+    set(value ${element})
+    source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${value})
+    set_property(TARGET ${_target} APPEND PROPERTY PUBLIC_HEADER ${value})
     cmakejson_get_project_property(PROPERTY PUBLIC_HEADER_INSTALL_DESTINATION)
     if(NOT "${element}" MATCHES "${PUBLIC_HEADER_INSTALL_DESTINATION}")
-        get_filename_component(filename "${element}" NAME)
-        get_filename_component(file "${element}" ABSOLUTE)
-        set(includestring "#pragma once\n#include \"${file}\"\n\n")
+        get_filename_component(filename "${value}" NAME)
+        get_filename_component(file "${value}" ABSOLUTE)
+        set(includestring "#pragma once\n#include \"${value}\"\n\n")
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${PUBLIC_HEADER_INSTALL_DESTINATION}/${filename}" "${includestring}")
     endif()
 endfunction()
@@ -33,7 +34,7 @@ function(cmakejson_set_target_property _prefix _target)
 endfunction()
 
 function(cmakejson_add_target _input _filename)
-    list(APPEND CMAKE_MESSAGE_CONTEXT "target")
+    list(APPEND CMAKE_MESSAGE_CONTEXT "target(${_filename})")
 
     cmakejson_validate_target_json("${_input}")
 
@@ -66,6 +67,15 @@ function(cmakejson_add_target _input _filename)
     cmake_language(CALL ${target_command} ${target_name} ${target_params} ${target_sources})
     source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${target_sources})
     cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Add target: ${target_command}(${target_name} ${target_params} ${target_sources})")
+
+    set(IS_OBJECT_LIBRARY FALSE)
+    if(target_params MATCHES "OBJECT")
+        set(IS_OBJECT_LIBRARY TRUE)
+    endif()
+    set(IS_INTERFACE_LIBRARY FALSE)
+    if(target_params MATCHES "INTERFACE")
+        set(IS_INTERFACE_LIBRARY TRUE)
+    endif()
 
     set(target_command_list 
                             compile_definitions
@@ -134,20 +144,15 @@ function(cmakejson_add_target _input _filename)
     endforeach()
 
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_PUBLIC_HEADERS cmakejson_add_public_header "${target_name}")
-    target_include_directories("${target_name}" PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
+    if(NOT IS_INTERFACE_LIBRARY)
+        target_include_directories("${target_name}" PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
+    endif()
 
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_PROPERTIES cmakejson_set_target_property "${target_name}")
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
-    set(IS_OBJECT_LIBRARY FALSE)
-    if(CMakeJSON_PARSE_TARGET_PARAMETERS MATCHES "OBJECT")
-        set(IS_OBJECT_LIBRARY TRUE)
-    endif()
-    set(IS_INTERFACE_LIBRARY FALSE)
-    if(CMakeJSON_PARSE_TARGET_PARAMETERS MATCHES "INTERFACE")
-        set(IS_INTERFACE_LIBRARY TRUE)
-    endif()
+
 
     if(IS_INTERFACE_LIBRARY AND NOT CMakeJSON_PARSE_TARGET_NO_IDE_INTERFACE_TARGET)
         # Create a target for INTERFACE targets so the sources are visible in an IDE
