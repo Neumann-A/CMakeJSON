@@ -16,6 +16,14 @@
             "CMakeJSON_DEBUG": {
               "type": "BOOL",
               "value": "ON"
+            },
+            "BUILD_TESTING": {
+              "type": "BOOL",
+              "value": "ON"
+            },
+            "BUILD_EXAMPLES": {
+              "type": "BOOL",
+              "value": "ON"
             }
           }
         }

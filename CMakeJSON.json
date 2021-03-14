@@ -1,0 +1,7 @@
+{
+    "name" : "CMakeJSON" ,
+    "homepage" : "https://github.com/Neumann-A/CMakeJSON",
+    "description" : "CMakeJSON",
+    "version" : "0.1.0",
+    "languages" : ["NONE"]
+}
