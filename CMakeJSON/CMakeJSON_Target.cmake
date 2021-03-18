@@ -145,7 +145,9 @@ function(cmakejson_add_target _input _filename)
 
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_PUBLIC_HEADERS cmakejson_add_public_header "${target_name}")
     if(NOT IS_INTERFACE_LIBRARY)
-        target_include_directories("${target_name}" PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
+        target_include_directories("${target_name}" PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
+    else()
+        target_include_directories("${target_name}" INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
     endif()
 
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_PROPERTIES cmakejson_set_target_property "${target_name}")
