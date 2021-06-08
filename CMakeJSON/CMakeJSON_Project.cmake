@@ -803,9 +803,9 @@ macro(cmakejson_project _input _filename)
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_LANGUAGES cmakejson_gather_json_array_as_list languages)
 
     if(CMakeJSON_ENABLE_PROJECT_OVERRIDE) # Assume manual setup otherwise. 
-        set(project_func _project)
+        set(project_func _${CMAKEJSON_PROJECT_MACRO})
     else()
-        set(project_func project)
+        set(project_func ${CMAKEJSON_PROJECT_MACRO})
     endif()
     if(NOT CURRENT_PROJECT OR CMakeJSON_PARSE_PROJECT_IS_SUPERBUILD OR CMakeJSON_PARSE_PROJECT_IS_EXTERNAL)
         cmake_language(CALL ${project_func} "${CMakeJSON_PARSE_PROJECT_NAME}"
@@ -855,11 +855,22 @@ macro(cmakejson_project_file _file)
     unset(file)
 endmacro()
 
-### project() override
-if(CMakeJSON_ENABLE_PROJECT_OVERRIDE)
-    macro(project)
+if(NOT CMAKEJSON_PROJECT_MACRO)
+    # This function checks if there is a function override in play. 
+    # CMakeJSON will overwrite the very last (_)*<function> it finds and append itself to it.
+    # This should be save in all cases
+    
+    cmakejson_get_required_underscores(CMAKEJSON_PROJECT_UNDERSCORES project)
+    # CMAKEJSON_PROJECT_MACRO is a CACHE variable because the backup function (_)+<function>
+    # seems to be global in scope instead of having directory scope like the macro function
+    # or maybe function overriding builtin functions get the scope of the function they are
+    # overwriting?
+    set(CMAKEJSON_PROJECT_MACRO ${CMAKEJSON_PROJECT_UNDERSCORES}project CACHE INTERNAL "")
+    cmake_print_variables(CMAKEJSON_PROJECT_UNDERSCORES CMAKEJSON_PROJECT_MACRO)
+    ### project() override
+    macro(${CMAKEJSON_PROJECT_MACRO})
         list(APPEND CMAKE_MESSAGE_CONTEXT "CMakeJSON")
-        if(${ARGV0} MATCHES "\.json$")
+        if("${ARGV0}" MATCHES "\.json$")
             set(CMakeJSON_USE_PROJECT_OVERRIDE ON)
             message(${CMakeJSON_MSG_VERBOSE_TYPE} "Detected json file: '${ARGV0}'")
         else()
@@ -868,7 +879,7 @@ if(CMakeJSON_ENABLE_PROJECT_OVERRIDE)
         endif()
         if(NOT CMakeJSON_USE_PROJECT_OVERRIDE)
             unset(CMakeJSON_USE_PROJECT_OVERRIDE)
-            _project(${ARGN})
+            cmake_language(CALL _${CMAKEJSON_PROJECT_MACRO} ${ARGN})
         else()
             unset(CMakeJSON_USE_PROJECT_OVERRIDE)
             get_filename_component(ARGV0_PATH "${ARGV0}" ABSOLUTE)

@@ -4,8 +4,6 @@ function(cmakejson_validate_target_json _jsoninput)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
-
-
 function(cmakejson_gather_json_array_target_link_libraries_as_list _prefix _outvar)
     set(element ${${_prefix}})
     list(APPEND ${_outvar} ${element})
