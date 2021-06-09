@@ -855,43 +855,42 @@ macro(cmakejson_project_file _file)
     unset(file)
 endmacro()
 
-if(NOT CMAKEJSON_PROJECT_MACRO)
-    # This function checks if there is a function override in play. 
-    # CMakeJSON will overwrite the very last (_)*<function> it finds and append itself to it.
-    # This should be save in all cases
-    
-    cmakejson_get_required_underscores(CMAKEJSON_PROJECT_UNDERSCORES project)
-    # CMAKEJSON_PROJECT_MACRO is a CACHE variable because the backup function (_)+<function>
-    # seems to be global in scope instead of having directory scope like the macro function
-    # or maybe function overriding builtin functions get the scope of the function they are
-    # overwriting?
-    set(CMAKEJSON_PROJECT_MACRO ${CMAKEJSON_PROJECT_UNDERSCORES}project CACHE INTERNAL "")
-    cmake_print_variables(CMAKEJSON_PROJECT_UNDERSCORES CMAKEJSON_PROJECT_MACRO)
-    ### project() override
-    macro(${CMAKEJSON_PROJECT_MACRO})
-        list(APPEND CMAKE_MESSAGE_CONTEXT "CMakeJSON")
-        if("${ARGV0}" MATCHES "\.json$")
-            set(CMakeJSON_USE_PROJECT_OVERRIDE ON)
-            message(${CMakeJSON_MSG_VERBOSE_TYPE} "Detected json file: '${ARGV0}'")
-        else()
-            message(${CMakeJSON_MSG_VERBOSE_TYPE} "Normal cmake project call! (${ARGV0})")
-            set(CMakeJSON_USE_PROJECT_OVERRIDE OFF)
+# This function checks if there is a function override in play. 
+# CMakeJSON will overwrite the very last (_)*<function> it finds and append itself to it.
+# This should be save in all cases
+
+cmakejson_get_required_underscores(CMAKEJSON_PROJECT_UNDERSCORES project)
+# CMAKEJSON_PROJECT_MACRO is a CACHE variable because the backup function (_)+<function>
+# seems to be global in scope instead of having directory scope like the macro function
+# or maybe function overriding builtin functions get the scope of the function they are
+# overwriting?
+set(CMAKEJSON_PROJECT_MACRO ${CMAKEJSON_PROJECT_UNDERSCORES}project CACHE INTERNAL "")
+cmake_print_variables(CMAKEJSON_PROJECT_UNDERSCORES CMAKEJSON_PROJECT_MACRO)
+### project() override
+macro(${CMAKEJSON_PROJECT_MACRO})
+    list(APPEND CMAKE_MESSAGE_CONTEXT "CMakeJSON")
+    if("${ARGV0}" MATCHES "\.json$")
+        set(CMakeJSON_USE_PROJECT_OVERRIDE ON)
+        message(${CMakeJSON_MSG_VERBOSE_TYPE} "Detected json file: '${ARGV0}'")
+    else()
+        message(${CMakeJSON_MSG_VERBOSE_TYPE} "Normal cmake project call! (${ARGV0})")
+        set(CMakeJSON_USE_PROJECT_OVERRIDE OFF)
+    endif()
+    if(NOT CMakeJSON_USE_PROJECT_OVERRIDE)
+        unset(CMakeJSON_USE_PROJECT_OVERRIDE)
+        cmake_language(CALL _${CMAKEJSON_PROJECT_MACRO} ${ARGN})
+    else()
+        unset(CMakeJSON_USE_PROJECT_OVERRIDE)
+        get_filename_component(ARGV0_PATH "${ARGV0}" ABSOLUTE)
+        if(EXISTS "${ARGV0_PATH}")
+            message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating project from file: '${ARGV0}'")
+            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ARGV0_PATH}")
+            string(APPEND CMAKE_MESSAGE_CONTEXT "(${ARGV0})")
+            cmakejson_project_file("${ARGV0_PATH}")
+        else() 
+            message(${CMakeJSON_MSG_ERROR_TYPE} "Cannot create project from given arguments! '${ARGN}'")
         endif()
-        if(NOT CMakeJSON_USE_PROJECT_OVERRIDE)
-            unset(CMakeJSON_USE_PROJECT_OVERRIDE)
-            cmake_language(CALL _${CMAKEJSON_PROJECT_MACRO} ${ARGN})
-        else()
-            unset(CMakeJSON_USE_PROJECT_OVERRIDE)
-            get_filename_component(ARGV0_PATH "${ARGV0}" ABSOLUTE)
-            if(EXISTS "${ARGV0_PATH}")
-                message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating project from file: '${ARGV0}'")
-                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ARGV0_PATH}")
-                string(APPEND CMAKE_MESSAGE_CONTEXT "(${ARGV0})")
-                cmakejson_project_file("${ARGV0_PATH}")
-            else() 
-                message(${CMakeJSON_MSG_ERROR_TYPE} "Cannot create project from given arguments! '${ARGN}'")
-            endif()
-        endif()
-        list(POP_BACK CMAKE_MESSAGE_CONTEXT)
-    endmacro()
-endif()
+    endif()
+    list(POP_BACK CMAKE_MESSAGE_CONTEXT)
+endmacro()
+

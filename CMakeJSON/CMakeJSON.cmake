@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.19)
-include_guard(DIRECTORY)
+include_guard(GLOBAL)
 
 include(CMakePackageConfigHelpers) # https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
 include(CMakeDependentOption) # https://cmake.org/cmake/help/latest/module/CMakeDependentOption.html
