@@ -2,7 +2,7 @@
 # This function will be called recursivley until all members have been discovered and the values been set to 
 function(cmakejson_parse_json)
     cmakejson_create_function_parse_arguments_prefix(_PREFIX)
-    cmake_parse_arguments(PARSE_ARGV 0 "${_PREFIX}" "IS_ARRAY;IS_OBJECT" "JSON_INPUT;VARIABLE_PREFIX;OUTPUT_LIST_CREATED_VARIABLES" "CURRENT_JSON_MEMBER_BASE")
+    cmake_parse_arguments(PARSE_ARGV 0 "${_PREFIX}" "IS_ARRAY;IS_OBJECT" "JSON_FILE;JSON_INPUT;VARIABLE_PREFIX;OUTPUT_LIST_CREATED_VARIABLES" "CURRENT_JSON_MEMBER_BASE")
     if(${_PREFIX}_UNPARSED_ARGUMENTS)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION} at ${CMAKE_CURRENT_FUNCTION_LIST_LINE}: Unknown parameters passed. UNPARSED:'${${_PREFIX}_UNPARSED_ARGUMENTS}' ")
     endif()
@@ -10,7 +10,7 @@ function(cmakejson_parse_json)
     ### Setting up helper variables. 
     list(TRANSFORM ${_PREFIX}_CURRENT_JSON_MEMBER_BASE TOUPPER OUTPUT_VARIABLE JSON_MEMBER_BASE_VAR)
     list(JOIN JSON_MEMBER_BASE_VAR "_" JSON_MEMBER_BASE_VAR)
-    set(CMakeJSON_CURRENT_VAR_PREFIX)
+    set(CMakeJSON_CURRENT_VAR_PREFIX "")
     if(${_PREFIX}_VARIABLE_PREFIX AND JSON_MEMBER_BASE_VAR)
         set(CMakeJSON_CURRENT_VAR_PREFIX ${${_PREFIX}_VARIABLE_PREFIX}_${JSON_MEMBER_BASE_VAR})
     elseif(${_PREFIX}_VARIABLE_PREFIX)
@@ -23,8 +23,11 @@ function(cmakejson_parse_json)
     ### Parsing logic
     set(access_list ${${_PREFIX}_ACCESS_LIST})
     string(JSON length ERROR_VARIABLE err LENGTH "${${_PREFIX}_JSON_INPUT}" ${${_PREFIX}_CURRENT_JSON_MEMBER_BASE})
+    if(err)
+        message(FATAL_ERROR "Error parsing JSON from file: '${${_PREFIX}_JSON_FILE}'\n ${err}")
+    endif()
     if(NOT length)
-        message(FATAL_ERROR "No length in '${${_PREFIX}_CURRENT_JSON_MEMBER_BASE}'; PREFIX:${_PREFIX}")
+        message(FATAL_ERROR "Error in:'${${_PREFIX}_JSON_FILE}'. No length in '${${_PREFIX}_CURRENT_JSON_MEMBER_BASE}'; PREFIX:${_PREFIX}")
     endif()
     math(EXPR range_length "${length}-1") # Correct range stop in for loop
     if(${_PREFIX}_IS_ARRAY)
@@ -51,6 +54,7 @@ function(cmakejson_parse_json)
             if(type STREQUAL OBJECT)
                 string(TOUPPER "${member_or_index}" member_name)
                 cmakejson_parse_json(IS_${type} 
+                                    JSON_FILE ${${_PREFIX}_JSON_FILE}
                                     JSON_INPUT 
                                         "${contents}"
                                     VARIABLE_PREFIX
@@ -61,6 +65,7 @@ function(cmakejson_parse_json)
             else()
                 string(TOUPPER "${member_or_index}" member_name)
                 cmakejson_parse_json(IS_${type} 
+                                     JSON_FILE ${${_PREFIX}_JSON_FILE}
                                      JSON_INPUT 
                                         "${contents}"
                                      VARIABLE_PREFIX

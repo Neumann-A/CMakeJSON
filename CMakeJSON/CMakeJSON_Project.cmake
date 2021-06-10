@@ -773,7 +773,8 @@ macro(cmakejson_project _input _filename)
     cmakejson_validate_project_json("${_input}")
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "parse")
-    cmakejson_parse_json(JSON_INPUT "${_input}"
+    cmakejson_parse_json(JSON_FILE  "${_filename}.json" # Not required
+                         JSON_INPUT "${_input}"
                          VARIABLE_PREFIX "PROJECT"
                          OUTPUT_LIST_CREATED_VARIABLES "PROJECT_PARSED_VARIABLES"
     )
@@ -868,7 +869,6 @@ set(CMAKEJSON_PROJECT_MACRO ${CMAKEJSON_PROJECT_UNDERSCORES}project CACHE INTERN
 cmake_print_variables(CMAKEJSON_PROJECT_UNDERSCORES CMAKEJSON_PROJECT_MACRO)
 ### project() override
 macro(${CMAKEJSON_PROJECT_MACRO})
-    list(APPEND CMAKE_MESSAGE_CONTEXT "CMakeJSON")
     if("${ARGV0}" MATCHES "\.json$")
         set(CMakeJSON_USE_PROJECT_OVERRIDE ON)
         message(${CMakeJSON_MSG_VERBOSE_TYPE} "Detected json file: '${ARGV0}'")
@@ -885,12 +885,12 @@ macro(${CMAKEJSON_PROJECT_MACRO})
         if(EXISTS "${ARGV0_PATH}")
             message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating project from file: '${ARGV0}'")
             set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ARGV0_PATH}")
-            string(APPEND CMAKE_MESSAGE_CONTEXT "(${ARGV0})")
+            list(APPEND CMAKE_MESSAGE_CONTEXT "CMakeJSON(${ARGV0})")
             cmakejson_project_file("${ARGV0_PATH}")
+            list(POP_BACK CMAKE_MESSAGE_CONTEXT)
         else() 
             message(${CMakeJSON_MSG_ERROR_TYPE} "Cannot create project from given arguments! '${ARGN}'")
         endif()
     endif()
-    list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endmacro()
 
