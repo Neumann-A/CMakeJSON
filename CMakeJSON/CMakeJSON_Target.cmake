@@ -188,7 +188,7 @@ function(cmakejson_add_target _input _filename)
         install(TARGETS ${target_name}
                 ${export_options}
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime
-                LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
+                LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Runtime NAMELINK_COMPONENT Development 
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
                 FRAMEWORK DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
                 PUBLIC_HEADER DESTINATION "${PUBLIC_HEADER_INSTALL_DESTINATION}" COMPONENT Development
