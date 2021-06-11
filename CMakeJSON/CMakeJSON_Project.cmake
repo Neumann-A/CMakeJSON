@@ -866,7 +866,7 @@ cmakejson_get_required_underscores(CMAKEJSON_PROJECT_UNDERSCORES project)
 # or maybe function overriding builtin functions get the scope of the function they are
 # overwriting?
 set(CMAKEJSON_PROJECT_MACRO ${CMAKEJSON_PROJECT_UNDERSCORES}project CACHE INTERNAL "")
-cmake_print_variables(CMAKEJSON_PROJECT_UNDERSCORES CMAKEJSON_PROJECT_MACRO)
+#cmake_print_variables(CMAKEJSON_PROJECT_UNDERSCORES CMAKEJSON_PROJECT_MACRO)
 ### project() override
 macro(${CMAKEJSON_PROJECT_MACRO})
     if("${ARGV0}" MATCHES "\.json$")
@@ -883,7 +883,7 @@ macro(${CMAKEJSON_PROJECT_MACRO})
         unset(CMakeJSON_USE_PROJECT_OVERRIDE)
         get_filename_component(ARGV0_PATH "${ARGV0}" ABSOLUTE)
         if(EXISTS "${ARGV0_PATH}")
-            message(${CMakeJSON_MSG_VERBOSE_TYPE} "Creating project from file: '${ARGV0}'")
+            message(${CMakeJSON_MSG_VERBOSE_TYPE} "Reading project JSON: '${ARGV0}'")
             set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ARGV0_PATH}")
             list(APPEND CMAKE_MESSAGE_CONTEXT "CMakeJSON(${ARGV0})")
             cmakejson_project_file("${ARGV0_PATH}")
