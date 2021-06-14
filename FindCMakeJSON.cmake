@@ -6,7 +6,7 @@ if(NOT CMakeJSON_INCLUDE_FILE AND NOT CMakeJSON_FOUND)
   FetchContent_Declare(
     CMakeJSON  
     GIT_REPOSITORY https://github.com/Neumann-A/CMakeJSON.git
-    GIT_TAG        483f69a420188cc445e2ce46befe188df67d7776
+    GIT_TAG        47737f2f87b5071dcad7b28248583aa2453e0dd5
   )
 
   FetchContent_GetProperties(CMakeJSON)
