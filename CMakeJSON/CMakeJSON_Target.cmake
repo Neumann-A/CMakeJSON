@@ -29,7 +29,7 @@ function(cmakejson_add_public_header _prefix _target)
 endfunction()
 
 function(cmakejson_set_target_property _prefix _target)
-    set_property(TARGET "${_target}" ${${_prefix}_APPEND_OPTION} PROPERTY ${${_prefix}_NAME} ${${_prefix}_VALUE})
+    set_property(TARGET "${_target}" ${${_prefix}_APPEND_OPTION} PROPERTY "${${_prefix}_NAME}" "${${_prefix}_VALUE}")
 endfunction()
 
 function(cmakejson_add_target _input _filename)
