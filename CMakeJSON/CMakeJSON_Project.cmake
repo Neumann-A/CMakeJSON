@@ -164,7 +164,7 @@ function(cmakejson_add_dependency _depprefix)
     cmakejson_run_func_over_parsed_range(${_depprefix}_FIND_PARAMETERS cmakejson_gather_json_array_as_list params)
 
     set(find_package_params "${dep_name}")
-    if(NOT DEFINED ${_depprefix}_VERSION)
+    if(DEFINED ${_depprefix}_VERSION)
         list(APPEND find_package_params ${${_depprefix}_VERSION})
     endif()
     if(${dep_name}_FOUND) # Internal to remove REQUIRED parameter
@@ -216,7 +216,7 @@ function(cmakejson_add_optional_dependency _depprefix _optname)
     cmakejson_run_func_over_parsed_range(${_depprefix}_FIND_PARAMETERS cmakejson_gather_json_array_as_list params)
 
     set(find_package_params "${dep_name}")
-    if(NOT DEFINED ${_depprefix}_VERSION)
+    if(DEFINED ${_depprefix}_VERSION)
         list(APPEND find_package_params ${${_depprefix}_VERSION})
     endif()
     set(disable_package)
