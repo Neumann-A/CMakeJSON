@@ -52,6 +52,17 @@ function(cmakejson_add_target _input _filename)
         return()
     endif()
 
+    set(TARGET_LIB_PREFIX "")
+    if(PARENT_PROJECT)
+        cmakejson_get_parent_project_property(PROPERTY PACKAGE_NAME)
+        set(TARGET_LIB_PREFIX "${PACKAGE_NAME}_")
+        set(id_prefix "${PACKAGE_NAME}")
+    else()
+        set(TARGET_LIB_PREFIX "${PACKAGE_NAME}_")
+        set(id_prefix "${PACKAGE_NAME}")
+    endif()
+    cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
+
     list(APPEND CMAKE_MESSAGE_CONTEXT "setup")
     if(NOT DEFINED CMakeJSON_PARSE_TARGET_NAME)
         set(CMakeJSON_PARSE_TARGET_NAME "${_filename}")
@@ -69,7 +80,8 @@ function(cmakejson_add_target _input _filename)
     set(target_sources)
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_SOURCES cmakejson_gather_json_array_as_list target_sources)
 
-    set(target_name ${CMakeJSON_PARSE_TARGET_NAME})
+    set(target_name ${id_prefix}-${CMakeJSON_PARSE_TARGET_NAME})
+    set(raw_target_name ${CMakeJSON_PARSE_TARGET_NAME})
     cmake_language(CALL ${target_command} ${target_name} ${target_params} ${target_sources})
     source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${target_sources})
     cmakejson_message_if(CMakeJSON_DEBUG_TARGET "Add target: ${target_command}(${target_name} ${target_params} ${target_sources})")
@@ -156,11 +168,19 @@ function(cmakejson_add_target _input _filename)
         target_include_directories("${target_name}" INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
     endif()
 
+    cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
+    cmakejson_get_project_property(PROPERTY PARENT_PROJECT)
+    
+    set_property(TARGET ${target_name} APPEND PROPERTY CMakeJSON_PACKAGE_NAME ${PACKAGE_NAME})
+    set_property(TARGET ${target_name} APPEND PROPERTY EXPORT_PROPERTIES CMakeJSON_PACKAGE_NAME)
+
+    if(NOT PACKAGE_NAME STREQUAL "${target_name}" AND PACKAGE_NAME)
+        set_property(TARGET ${target_name} PROPERTY OUTPUT_NAME ${TARGET_LIB_PREFIX}${CMakeJSON_PARSE_TARGET_NAME})
+    endif()
+
     cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_TARGET_PROPERTIES cmakejson_set_target_property "${target_name}")
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
-
-
 
     if(IS_INTERFACE_LIBRARY AND NOT CMakeJSON_PARSE_TARGET_NO_IDE_INTERFACE_TARGET)
         # Create a target for INTERFACE targets so the sources are visible in an IDE
@@ -181,6 +201,17 @@ function(cmakejson_add_target _input _filename)
         cmakejson_get_project_property(PROPERTY EXPORT_NAME)
         set(export_options EXPORT "${EXPORT_NAME}")
     endif()
+
+    # Create alias target (Alias now gets always created)
+    cmakejson_get_project_property(PROPERTY EXPORT_NAMESPACE)
+    get_target_property(IS_EXECUTABLE ${target_name} TYPE)
+    if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
+        add_executable(${EXPORT_NAMESPACE}::${CMakeJSON_PARSE_TARGET_NAME} ALIAS ${target_name})
+    else()
+        add_library(${EXPORT_NAMESPACE}::${CMakeJSON_PARSE_TARGET_NAME} ALIAS ${target_name})
+        message(STATUS "CREATING ALIAS: ${EXPORT_NAMESPACE}::${CMakeJSON_PARSE_TARGET_NAME} for ${target_name}")
+    endif()
+
 
     if(NOT CMakeJSON_PARSE_TARGET_INSTALL_PARAMETERS)
         cmakejson_get_project_property(PROPERTY PUBLIC_HEADER_INSTALL_DESTINATION)
@@ -208,10 +239,6 @@ function(cmakejson_add_target _input _filename)
     if(DEFINED CMakeJSON_PARSE_TARGET_PUBLIC_INCLUDE_DIRECTORY)
         install(DIRECTORY ${CMakeJSON_PARSE_TARGET_PUBLIC_INCLUDE_DIRECTORY} DESTINATION ${USAGE_INCLUDE_DIRECTORY} COMPONENT Development)
     endif()
-
-    cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
-    set_property(TARGET ${target_name} APPEND PROPERTY CMakeJSON_PACKAGE_NAME ${PACKAGE_NAME})
-    set_property(TARGET ${target_name} APPEND PROPERTY EXPORT_PROPERTIES CMakeJSON_PACKAGE_NAME)
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
