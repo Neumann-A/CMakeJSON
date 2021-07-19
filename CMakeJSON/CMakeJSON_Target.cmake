@@ -185,7 +185,8 @@ function(cmakejson_add_target _input _filename)
     cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
     cmakejson_get_project_property(PROPERTY PARENT_PROJECT)
     
-    set_property(TARGET ${target_name} APPEND PROPERTY CMakeJSON_PACKAGE_NAME ${PACKAGE_NAME})
+    set_property(TARGET ${target_name} APPEND PROPERTY CMakeJSON_PACKAGE_NAME "${PACKAGE_NAME}")
+    set_property(TARGET ${target_name} PROPERTY EXPORT_NAME "${raw_target_name}")
     set_property(TARGET ${target_name} APPEND PROPERTY EXPORT_PROPERTIES CMakeJSON_PACKAGE_NAME)
 
     if(NOT PACKAGE_NAME STREQUAL "${target_name}" AND PACKAGE_NAME)
