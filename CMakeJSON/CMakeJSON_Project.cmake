@@ -729,14 +729,14 @@ function(cmakejson_close_project)
     # Alias all exported targets into the namespace ${PROJECT_NAME}_PACKAGE_NAME 
     # just as the target file would do. Assumes that all variables are available just 
     # like if find_package is called.
-    foreach(_target IN LISTS EXPORTED_TARGETS)
-        get_target_property(IS_EXECUTABLE ${_target} TYPE)
-        if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
-            add_executable(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
-        else()
-            add_library(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
-        endif()
-    endforeach()
+    # foreach(_target IN LISTS EXPORTED_TARGETS)
+    #     get_target_property(IS_EXECUTABLE ${_target} TYPE)
+    #     if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
+    #         add_executable(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
+    #     else()
+    #         add_library(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
+    #     endif()
+    # endforeach()
 
     # Disable find_package for internally available packages.
     if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
