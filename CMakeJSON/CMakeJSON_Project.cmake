@@ -324,7 +324,6 @@ function(cmakejson_close_project)
     cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
     cmakejson_get_project_property(PROPERTY EXPORT_NAMESPACE)
     cmakejson_get_project_property(PROPERTY EXPORT_NAME)
-    cmakejson_get_project_property(PROPERTY EXPORTED_TARGETS)
     cmakejson_get_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION)
     cmakejson_get_project_property(PROPERTY CHILD_PROJECTS)
 
@@ -357,18 +356,6 @@ function(cmakejson_close_project)
                 FILE ${PACKAGE_NAME}Targets.cmake 
                 DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}")
     endif()
-
-    # Alias all exported targets into the namespace ${PROJECT_NAME}_PACKAGE_NAME 
-    # just as the target file would do. Assumes that all variables are available just 
-    # like if find_package is called.
-    # foreach(_target IN LISTS EXPORTED_TARGETS)
-    #     get_target_property(IS_EXECUTABLE ${_target} TYPE)
-    #     if(IS_EXECUTABLE STREQUAL "EXECUTABLE")
-    #         add_executable(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
-    #     else()
-    #         add_library(${EXPORT_NAMESPACE}::${_target} ALIAS ${_target})
-    #     endif()
-    # endforeach()
 
     # Disable find_package for internally available packages.
     if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
