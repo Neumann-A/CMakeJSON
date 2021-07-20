@@ -311,7 +311,7 @@ function(cmakejson_setup_project)
     cmakejson_project_options()
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "list")
-    cmakejson_run_func_over_parsed_range(CMakeJSON_PARSE_PROJECT_LIST cmakejson_analyze_list)
+    cmakejson_run_macro_over_parsed_range(CMakeJSON_PARSE_PROJECT_LIST cmakejson_analyze_list)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
