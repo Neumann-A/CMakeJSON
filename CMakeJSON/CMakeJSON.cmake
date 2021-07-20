@@ -63,6 +63,8 @@ list(APPEND cmakejson_cmake_files
     Helpers
     ValidateJSON
     ParseJSON
+    Project_Config
+    Project_Dependency
     Project
     Target
     FindModule
