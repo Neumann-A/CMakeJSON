@@ -241,12 +241,13 @@ macro(cmakejson_analyze_list _listprefix)
     unset(cmakejson_analyze_list_element)
 endmacro()
 
-function(cmakejson_setup_project)
+macro(cmakejson_setup_project)
+    get_directory_property(cmakejson_vars_before_setup VARIABLES)
     list(APPEND CMAKE_MESSAGE_CONTEXT "setup")
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "general")
     # TODO: More Parent project handling!
-    set(PARENT_PROJECT)
+    unset(PARENT_PROJECT)
     cmakejson_get_directory_property(PROPERTY CURRENT_PROJECT)
     if(CURRENT_PROJECT)
         set(PARENT_PROJECT "${CURRENT_PROJECT}")
@@ -289,6 +290,9 @@ function(cmakejson_setup_project)
             cmakejson_set_project_property(PROPERTY ${_prop} "${CMakeJSON_PARSE_PROJECT_${_prop}}")
         endif()
     endforeach()
+    unset(project_properties)
+    unset(_prop)
+
     unset(CMakeJSON_PARSE_PROJECT_PUBLIC_HEADER_INSTALL_DESTINATION)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
@@ -305,6 +309,7 @@ function(cmakejson_setup_project)
     if(DEFINED cmakejson_find_package_code)
         #message(STATUS "Executing (add_dependency):\n '${cmakejson_find_package_code}'")
         cmake_language(EVAL CODE "${cmakejson_find_package_code}")
+        unset(cmakejson_find_package_code)
     endif()
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
@@ -315,7 +320,16 @@ function(cmakejson_setup_project)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
-endfunction()
+    unset(CURRENT_PROJECT)
+    unset(PARENT_PROJECT)
+
+    #cmakejson_vars_before_setup
+    #cmakejson_vars_before_setup
+    get_directory_property(cmakejson_vars_after_setup VARIABLES)
+    list(REMOVE_ITEM cmakejson_vars_after_setup ${cmakejson_vars_before_setup} cmakejson_vars_before_setup)
+    cmake_print_variables(cmakejson_vars_before_setup)
+    cmake_print_variables(cmakejson_vars_after_setup)
+endmacro()
 
 function(cmakejson_determine_list_element)
     cmakejson_create_function_parse_arguments_prefix(_PREFIX)
@@ -384,6 +398,7 @@ function(cmakejson_close_project)
     else()
         cmakejson_set_directory_property(PROPERTY CURRENT_PROJECT "")
     endif()
+    unset(PARENT_PROJECT)
     list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endfunction()
 
