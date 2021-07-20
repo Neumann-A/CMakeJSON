@@ -1,4 +1,5 @@
-# Code which generates the find_package calls. 
+# Code which generates the find_package calls.
+# The find_package call needs to be in the same scope as the project 
 
 function(cmakejson_setup_project_common_dependency_properties _depprefix _out_depname)
     if(DEFINED ${_depprefix})
@@ -19,7 +20,7 @@ function(cmakejson_setup_project_common_dependency_properties _depprefix _out_de
     set(${_out_depname} "${dep_name}" PARENT_SCOPE)
 endfunction()
 
-function(cmakejson_generate_find_package_string _depprefix _out_string)
+function(cmakejson_generate_find_package_string _depprefix _out_string) # unused?
     if(DEFINED ${_depprefix})
         set(dep_name ${${_depprefix}})
     elseif(DEFINED ${_depprefix}_NAME)
@@ -44,7 +45,7 @@ function(cmakejson_generate_find_package_string _depprefix _out_string)
     set(${_out_depname} "${dep_name}" PARENT_SCOPE)
 endfunction()
 
-function(cmakejson_add_dependency _depprefix)
+function(cmakejson_add_dependency _depprefix _out_find_package_code)
     cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
     if(DEFINED ${_depprefix}_CONDITION)
         if(NOT ${${_depprefix}_CONDITION})
@@ -81,20 +82,18 @@ function(cmakejson_add_dependency _depprefix)
     list(JOIN find_package_params ";" find_package_str)
     cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_params}")
     cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "find_package(${find_package_str})")
-
-    get_directory_property(vars_before VARIABLES)
-    find_package(${find_package_str})
-    get_directory_property(vars_after VARIABLES)
-    list(REMOVE_ITEM vars_after ${vars_before})
-    cmakejson_return_to_parent_scope(${vars_after})
-
+    string(APPEND ${_out_find_package_code} 
+            "
+            find_package(${find_package_str} ${disable_package})
+            set_package_properties(${dep_name} PROPERTIES TYPE REQUIRED)")
     if(DEFINED ${_depprefix}_PURPOSE)
-        set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
+        string(APPEND ${_out_find_package_code} "
+            set_package_properties(${dep_name} PROPERTIES PURPOSE \"${${_depprefix}_PURPOSE}\")")
     endif()
-    set_package_properties(${dep_name} PROPERTIES TYPE REQUIRED)
+    cmakejson_return_to_parent_scope(${_out_find_package_code})
 endfunction()
 
-function(cmakejson_add_optional_dependency _depprefix _optname)
+function(cmakejson_add_optional_dependency _depprefix _optname _out_find_package_code)
     cmakejson_setup_project_common_dependency_properties(${_depprefix} dep_name)
     if(DEFINED ${_depprefix}_CONDITION)
         if(NOT ${${_depprefix}_CONDITION})
@@ -142,14 +141,13 @@ function(cmakejson_add_optional_dependency _depprefix _optname)
     cmakejson_set_project_property(PROPERTY DEPENDENCY_${dep_name}_FIND_PACKAGE "${find_package_params}")
     cmakejson_message_if(CMakeJSON_DEBUG_PROJECT_DEPENDENCIES "find_package(${find_package_str} ${disable_package})")
 
-    get_directory_property(vars_before VARIABLES)
-    find_package(${find_package_str} ${disable_package})
-    get_directory_property(vars_after VARIABLES)
-    list(REMOVE_ITEM vars_after ${vars_before})
-    cmakejson_return_to_parent_scope(${vars_after})
-
+    string(APPEND ${_out_find_package_code} 
+            "
+            find_package(${find_package_str} ${disable_package})
+            set_package_properties(${dep_name} PROPERTIES TYPE OPTIONAL)")
     if(DEFINED ${_depprefix}_PURPOSE)
-        set_package_properties(${dep_name} PROPERTIES PURPOSE "${${_depprefix}_PURPOSE}")
+        string(APPEND ${_out_find_package_code} "
+            set_package_properties(${dep_name} PROPERTIES PURPOSE \"${${_depprefix}_PURPOSE}\")")
     endif()
-    set_package_properties(${dep_name} PROPERTIES TYPE OPTIONAL)
+    cmakejson_return_to_parent_scope(${_out_find_package_code})
 endfunction()
