@@ -207,7 +207,7 @@ function(cmakejson_generate_project_config)
     elseif(VERSION OR VERSION_COMPATIBILITY)
         message(${CMakeJSON_MSG_ERROR_TYPE} "Cannot define VERSION or VERSION_COMPATIBILITY without setting both!")
     endif()
-                                     
+
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CONFIG_INSTALL_DESTINATION}/${PACKAGE_NAME}Config.install.cmake"
             DESTINATION "${CMAKE_CONFIG_INSTALL_DESTINATION}"
             RENAME "${PACKAGE_NAME}Config.cmake")
