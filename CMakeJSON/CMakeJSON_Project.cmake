@@ -242,7 +242,7 @@ macro(cmakejson_analyze_list _listprefix)
 endmacro()
 
 macro(cmakejson_setup_project)
-    get_directory_property(cmakejson_vars_before_setup VARIABLES)
+    #get_directory_property(cmakejson_vars_before_setup VARIABLES)
     list(APPEND CMAKE_MESSAGE_CONTEXT "setup")
 
     list(APPEND CMAKE_MESSAGE_CONTEXT "general")
@@ -325,10 +325,10 @@ macro(cmakejson_setup_project)
 
     #cmakejson_vars_before_setup
     #cmakejson_vars_before_setup
-    get_directory_property(cmakejson_vars_after_setup VARIABLES)
-    list(REMOVE_ITEM cmakejson_vars_after_setup ${cmakejson_vars_before_setup} cmakejson_vars_before_setup)
-    cmake_print_variables(cmakejson_vars_before_setup)
-    cmake_print_variables(cmakejson_vars_after_setup)
+    #get_directory_property(cmakejson_vars_after_setup VARIABLES)
+    #list(REMOVE_ITEM cmakejson_vars_after_setup ${cmakejson_vars_before_setup} cmakejson_vars_before_setup)
+    #cmake_print_variables(cmakejson_vars_before_setup)
+    #cmake_print_variables(cmakejson_vars_after_setup)
 endmacro()
 
 function(cmakejson_determine_list_element)
