@@ -347,6 +347,7 @@ function(cmakejson_close_project)
     cmakejson_get_project_property(PROPERTY PACKAGE_NAME)
     cmakejson_get_project_property(PROPERTY EXPORT_NAMESPACE)
     cmakejson_get_project_property(PROPERTY EXPORT_NAME)
+    cmakejson_get_project_property(PROPERTY EXPORTED_TARGETS)
     cmakejson_get_project_property(PROPERTY CMAKE_CONFIG_INSTALL_DESTINATION)
     cmakejson_get_project_property(PROPERTY CHILD_PROJECTS)
 
