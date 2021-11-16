@@ -239,7 +239,8 @@ function(cmakejson_add_target _input _filename)
 
     if(NOT CMakeJSON_PARSE_TARGET_INSTALL_PARAMETERS)
         cmakejson_get_project_property(PROPERTY PUBLIC_HEADER_INSTALL_DESTINATION)
-        # TODO: Make this better customizable from the json instead of overwriting everything. 
+        # TODO: Make this better customizable from the json instead of overwriting everything.
+        include(GNUInstallDirs)
         install(TARGETS ${target_name}
                 ${export_options}
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT ${id_prefix}-Runtime
